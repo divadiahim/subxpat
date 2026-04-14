@@ -16,7 +16,6 @@ from sxpat.specifications import Specifications, TemplateType, ErrorPartitioning
 from sxpat.config.config import UNKNOWN, SAT, WEIGHT
 
 from sxpat.utils.filesystem import FS
-from sxpat.utils.name import NameData
 from sxpat.utils.timer import Timer
 from sxpat.utils.print import pprint
 
@@ -297,7 +296,6 @@ def explore_grid(specs_obj: Specifications):
                 pprint.success(f'{status.upper()} ({len(models)} models found)', f'{_cell_time:.2f}s')
 
                 #
-                base_path = path_join(specs_obj.path.run.verilog, f'gen_iter{specs_obj.iteration}_model{{model_number}}.v')
                 cur_model_results: List[ExpandedCircuitData] = list()
                 #
                 for model_number, model in enumerate(models):
@@ -305,7 +303,8 @@ def explore_grid(specs_obj: Specifications):
                     a_graph = set_bool_constants(param_circ, model, skip_missing=True)
 
                     # export approximate graph as verilog
-                    verilog_path = base_path.format(model_number=model_number)
+                    circuit_id = f'gen_iter{specs_obj.iteration}_model{model_number}'
+                    verilog_path = path_join(specs_obj.path.run.verilog, f'{circuit_id}.v')
                     VerilogExporter.to_file(
                         a_graph, verilog_path,
                         VerilogExporter.Info(model_number=model_number),
@@ -314,6 +313,7 @@ def explore_grid(specs_obj: Specifications):
                     # compute circuit metrics
                     _metrics = MetricsEstimator.estimate_metrics(specs_obj.path.synthesis, verilog_path, specs_obj.path.run.temporary)
                     cur_model_results.append(ExpandedCircuitData(
+                        circuit_id,
                         verilog_path,
                         _metrics.area,
                         _metrics.power,
@@ -345,7 +345,7 @@ def explore_grid(specs_obj: Specifications):
                         specs_obj.stats_storage.stage(ERROR='error_verification_failed')
                         specs_obj.stats_storage.commit()
                         #
-                        raise Exception(f'ErrorEval Verification FAILED! with wce = {candidate_data.error_to_origin}')
+                        raise Exception(f'ErrorEval Verification FAILED with wce = {candidate_data.error_to_origin} for circuit {candidate_data.path}')
 
                 # logging
                 specs_obj.stats_storage.stage(verification_time=verification_timer.total)
@@ -495,7 +495,7 @@ def print_current_model(
     # aggregate table data
     data.extend(
         (
-            NameData.from_filename(model_data.path).total_id,
+            model_data.id,
             model_data.area, model_data.power, model_data.delay,
             model_data.error_to_origin
         )
@@ -539,6 +539,7 @@ def node_matcher(n1: dict, n2: dict) -> bool:
 
 @dc.dataclass
 class ExpandedCircuitData:
+    id: str
     path: str
     area: float
     power: float
