@@ -1885,17 +1885,13 @@ class AnnotatedGraph(Graph):
         # find subgraph
         # NOTE: given that the node with the smallest weight is a valid subgraph, this loop should only iterate once
         for (i, specs_obj.et) in enumerate(actual_partition):
-            found_subgraph = self.find_subgraph_feasible_hard_limited_inputs_datatype_bitvec(specs_obj)  # Critian's subgraph extraction
-            cnt_nodes = sum(
-                found_subgraph.nodes[gate_name][SUBGRAPH] == 1
-                for gate_name in self.gate_dict.values()
-            )
-            if cnt_nodes > 0: break
+            subgraph_nodes = self.find_subgraph_feasible_hard_limited_inputs_datatype_bitvec(specs_obj)  # Critian's subgraph extraction
+            if len(subgraph_nodes) > 0: break
 
         # restore updated parameters
         specs_obj.et = saved_et
 
-        return found_subgraph
+        return subgraph_nodes
 
     def slash_to_kill(self, specs_obj: Specifications) -> List[str]:
         """
