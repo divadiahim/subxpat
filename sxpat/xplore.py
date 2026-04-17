@@ -187,6 +187,7 @@ def explore_grid(specs_obj: Specifications):
         print(f'subgraph_extraction_time = {_time}')
         # logging
         if specs_obj.debug: 
+            specs_obj.stats_storage.stage(subgraph_dot=os.path.relpath(current_graph.subgraph_out_path, specs_obj.path.run.base_folder))
             current_graph.export_annotated_graph()
             print(f'subgraph exported at {current_graph.subgraph_out_path}')
 
