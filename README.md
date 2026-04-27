@@ -101,6 +101,7 @@ Here are all the parameters with their arguments and descriptions:
 | `--error-partitioning` <br> `--epar`          | { asc, desc, smart_asc, smart_desc }    | asc                                | The error partitioning algorithm to use                                |
 | `--output`                                    | `path` to folder                        | `output/`                          | The base directory for the output                                      |
 | `--cell-library`                              | `path` to lib file                      | `config/gscl45nm.lib`              | The cell library file to use in the metrics estimation                 |
+| `--cqesto`                                    | `path`                                  | `cqesto`                           | The path of the cqesto executable                                      |
 | `--archive`                                   |                                         |                                    | If the generated files should be archived at the end of the execution  |
 | `--debug`                                     |                                         | 10800 (3h)                         | The maximum time each cell is given to run (in seconds)                |
 | `--timeout`                                   | `float` > 0                             | 10800 (3h)                         | The maximum time each cell is given to run (in seconds)                |
