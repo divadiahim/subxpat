@@ -1,6 +1,6 @@
 # settings
 
-PY := python3.11
+PY := python3.8
 ENV_NAME := .venv
 DELETION_DELAY ?= 10
 
@@ -39,11 +39,11 @@ py_dep: py_init
 pygraphviz_dep: py_init
 	@echo "\n[[ installing pygraphviz with graphviz 14.x patch ]]"
 	$(eval PGVTMP := $(shell mktemp -d))
-	$(IN_ENV) pip download pygraphviz==1.14 --no-deps -d $(PGVTMP)
-	cd $(PGVTMP) && tar xzf pygraphviz-1.14.tar.gz
-	sed -i 's/unsigned int \*arg5 = (unsigned int \*) 0 ;/size_t *arg5 = (size_t *) 0 ;/' $(PGVTMP)/pygraphviz-1.14/pygraphviz/graphviz_wrap.c
-	sed -i 's/unsigned int tempn4 ;/size_t tempn4 ;/' $(PGVTMP)/pygraphviz-1.14/pygraphviz/graphviz_wrap.c
-	$(IN_ENV) pip install $(PGVTMP)/pygraphviz-1.14
+	$(IN_ENV) pip download pygraphviz==1.10 --no-deps -d $(PGVTMP)
+	cd $(PGVTMP) && unzip -q pygraphviz-1.10.zip
+	sed -i 's/unsigned int \*arg5 = (unsigned int \*) 0 ;/size_t *arg5 = (size_t *) 0 ;/' $(PGVTMP)/pygraphviz-1.10/pygraphviz/graphviz_wrap.c
+	sed -i 's/unsigned int tempn4 ;/size_t tempn4 ;/' $(PGVTMP)/pygraphviz-1.10/pygraphviz/graphviz_wrap.c
+	$(IN_ENV) pip install $(PGVTMP)/pygraphviz-1.10
 	rm -rf $(PGVTMP)
 
 setup: py_init py_dep
