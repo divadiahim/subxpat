@@ -13,7 +13,7 @@
 /results
 /*.csv
 # scripts
-/scripts
+# /scripts
 /*.sh
 
 #> generated
