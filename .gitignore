@@ -6,14 +6,14 @@
 /local.mk
 **/*.local
 **/local.*
-/test
+# /test  -- tracked for correctness and performance tests
 /experiments
 /output
 # data
 /results
 /*.csv
 # scripts
-/scripts
+# /scripts  -- tracked for benchmarking utilities
 /*.sh
 
 #> generated

@@ -2,9 +2,12 @@ from typing import Dict
 
 import re
 import os
+import sys
 import copy
 import csv
+import concurrent.futures
 from os.path import join as path_join
+from subprocess import PIPE, Popen
 
 from .utils import get_pure_name
 from .graph import Graph
@@ -423,6 +426,35 @@ class Z3solver(_Z3solver):
                 approximate_output_declaration + declare_error_distance_function + strategy)
 
         self.export_z3pyscript()
+
+    def run_z3pyscript_labeling(self):
+        """Override the base-class pool with a proper concurrent.futures executor.
+
+        The base class uses ``active_procs.pop(0)`` which always waits for the
+        *oldest* process rather than whichever finishes first.  On workloads
+        where gate solve-times vary this serialises the entire pool.  We replace
+        it with ``ThreadPoolExecutor`` + ``as_completed`` so the next script is
+        dispatched the moment any worker slot becomes free.
+        """
+        _python = sys.executable
+
+        def _run(script):
+            proc = Popen([_python, script], stderr=PIPE, stdout=PIPE)
+            proc.communicate()
+
+        scripts = list(self.pyscript_files_for_labeling)
+        if not scripts:
+            return
+
+        if self.parallel:
+            n_workers = os.cpu_count() or 1
+            with concurrent.futures.ThreadPoolExecutor(max_workers=n_workers) as pool:
+                futures = {pool.submit(_run, s): s for s in scripts}
+                for _ in concurrent.futures.as_completed(futures):
+                    pass
+        else:
+            for s in scripts:
+                _run(s)
 
     def __repr__(self):
         return (

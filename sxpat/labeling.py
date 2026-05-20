@@ -1,6 +1,8 @@
 from typing import Dict, Tuple
 
 import os
+import time
+import tempfile
 from os.path import join as path_join
 from contextlib import redirect_stdout
 
@@ -60,3 +62,50 @@ def labeling_explicit(exact_in_verilog_path: str, current_in_verilog_path: str,
             )
 
     return labels_pair
+
+
+def time_labeling(
+    benchmark_name: str,
+    min_labeling: bool,
+    partial_labeling: bool,
+    partial_cutoff: int,
+    parallel: bool,
+    constant_value: bool = False,
+    output_base: str = 'output',
+) -> Tuple[Dict[str, int], float]:
+    """Run ``labeling_explicit`` for a named benchmark and return elapsed time.
+
+    Convenience wrapper for benchmarking scripts.  Creates a temporary
+    ``Paths.RunFiles`` so callers don't need to build one manually.
+
+    Parameters
+    ----------
+    benchmark_name:
+        Name of the benchmark, e.g. ``"adder_i8_o5"``.  The Verilog file is
+        expected at ``input/ver/<benchmark_name>.v``.
+    output_base:
+        Base directory for output files (default: ``'output'``).
+
+    Returns
+    -------
+    tuple[dict, float]
+        ``(labels, elapsed_seconds)`` where *labels* maps gate names to WCE
+        values and *elapsed_seconds* is the wall-clock duration of the call.
+    """
+    from sxpat.specifications import Paths
+
+    verilog_path = os.path.join('input', 'ver', f'{benchmark_name}.v')
+    run_paths = Paths.RunFiles(f'labeling_{benchmark_name}', output_base)
+    os.makedirs(run_paths.temporary, exist_ok=True)
+
+    t0 = time.perf_counter()
+    labels, _ = labeling_explicit(
+        verilog_path, verilog_path, run_paths,
+        min_labeling=min_labeling,
+        partial_labeling=partial_labeling,
+        partial_cutoff=partial_cutoff,
+        constant_value=constant_value,
+        parallel=parallel,
+    )
+    elapsed = time.perf_counter() - t0
+    return labels, elapsed
