@@ -1,0 +1,5 @@
+benchmark,mode,setup_s,gen_s,exec_s,import_s,overhead_s,total_s,exec_pct,gen_pct
+adder_i4_o3,sequential,0.584,0.1351,2.5371,0.003,0.0006,3.2599,77.8,4.1
+adder_i4_o3,parallel,0.5194,0.1525,0.7715,0.0009,0.0006,1.445,53.4,10.6
+adder_i8_o5,sequential,0.7014,0.6812,6.8337,0.0035,0.0014,8.2212,83.1,8.3
+adder_i8_o5,parallel,0.6779,0.6997,1.9659,0.0048,0.0014,3.3497,58.7,20.9
