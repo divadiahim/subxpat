@@ -1,0 +1,56 @@
+#!/bin/bash
+#SBATCH --job-name=sxpat-prof
+#SBATCH --partition=regular
+#SBATCH --time=24:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=16G
+#SBATCH --array=1-50
+#SBATCH --output=cluster/logs/prof_%A_%a.out
+#SBATCH --error=cluster/logs/prof_%A_%a.err
+#
+# Runs profile_labeling.py for ONE benchmark per array task.
+# Profiles both sequential and parallel modes (--both).
+#
+# Usage:
+#   sbatch cluster/profile_labeling.job                  # all 50 benchmarks
+#   sbatch --array=15-32 cluster/profile_labeling.job    # adders only
+#   sbatch --array=1-5 cluster/profile_labeling.job      # quick test
+
+set -euo pipefail
+
+# ── Modules (match setup_env.sh) ──────────────────────────────────────
+PYTHON_MODULE="Python/3.11.3-GCCcore-12.3.0"
+GRAPHVIZ_MODULE="Graphviz/8.1.0-GCCcore-12.3.0"
+# ──────────────────────────────────────────────────────────────────────
+
+module purge
+module load "${PYTHON_MODULE}"
+module load "${GRAPHVIZ_MODULE}"
+
+VENV_DIR=".venv_habrok"
+source "${VENV_DIR}/bin/activate"
+
+BENCHMARK=$(sed "${SLURM_ARRAY_TASK_ID}q;d" cluster/benchmarks.txt)
+
+# Per-task output dir to avoid CSV overwrites from concurrent array jobs
+TASK_OUT="profiling/results/habrok/${BENCHMARK}"
+mkdir -p "${TASK_OUT}"
+
+echo "================================================================"
+echo "  Job ID:     ${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+echo "  Benchmark:  ${BENCHMARK}"
+echo "  CPUs:       ${SLURM_CPUS_PER_TASK}"
+echo "  Node:       $(hostname)"
+echo "  Started:    $(date -Iseconds)"
+echo "================================================================"
+
+python -u profiling/profile_labeling.py \
+    --benchmarks "${BENCHMARK}" \
+    --both \
+    --no-cprofile \
+    --out-dir "${TASK_OUT}"
+
+echo ""
+echo "Finished: $(date -Iseconds)"

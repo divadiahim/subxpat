@@ -273,9 +273,12 @@ def main():
                         help='Number of top functions in cProfile report (default 25)')
     parser.add_argument('--no-cprofile', action='store_true',
                         help='Skip cProfile (faster; only phase breakdown)')
+    parser.add_argument('--out-dir', default=RESULTS_DIR,
+                        help=f'Output directory (default: {RESULTS_DIR})')
     args = parser.parse_args()
 
-    os.makedirs(RESULTS_DIR, exist_ok=True)
+    results_dir = args.out_dir
+    os.makedirs(results_dir, exist_ok=True)
 
     modes = []
     if args.both:
@@ -284,7 +287,7 @@ def main():
         modes = [args.parallel]
 
     all_rows = []
-    csv_path = os.path.join(RESULTS_DIR, 'phase_breakdown.csv')
+    csv_path = os.path.join(results_dir, 'phase_breakdown.csv')
 
     for benchmark in args.benchmarks:
         for parallel in modes:
@@ -309,13 +312,7 @@ def main():
                 trimmed = '\n'.join(stat_lines[:header_idx + 1 + args.top + 5])
                 print(trimmed)
 
-                prof_path = os.path.join(RESULTS_DIR, f'{benchmark}_{mode_tag}.prof')
-                profiler = cProfile.Profile()
-                # Re-dump stats — we already captured them in the string above;
-                # dump by rebuilding from the stream isn't possible, so we save
-                # a lightweight marker file instead.  The user can re-run with
-                # profiler.dump_stats() if they want the raw binary.
-                txt_path = os.path.join(RESULTS_DIR, f'{benchmark}_{mode_tag}_cprofile.txt')
+                txt_path = os.path.join(results_dir, f'{benchmark}_{mode_tag}_cprofile.txt')
                 with open(txt_path, 'w') as f:
                     f.write(cprofile_report)
                 print(f'\n  Full cProfile report saved: {txt_path}')

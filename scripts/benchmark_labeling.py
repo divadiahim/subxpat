@@ -98,9 +98,11 @@ def main():
     )
     parser.add_argument("--partial-cutoff", type=int, default=DEFAULT_PARTIAL_CUTOFF)
     parser.add_argument("--repeats", type=int, default=DEFAULT_REPEATS)
+    parser.add_argument("--output-csv", default=OUTPUT_CSV,
+                        help=f"Output CSV path (default: {OUTPUT_CSV})")
     args = parser.parse_args()
 
-    os.makedirs(os.path.dirname(OUTPUT_CSV), exist_ok=True)
+    os.makedirs(os.path.dirname(args.output_csv), exist_ok=True)
 
     all_rows = []
     for benchmark in args.benchmarks:
@@ -109,12 +111,12 @@ def main():
             row = run_benchmark(benchmark, args.partial_cutoff, r)
             all_rows.append(row)
 
-    with open(OUTPUT_CSV, "w", newline="") as f:
+    with open(args.output_csv, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=CSV_HEADER)
         writer.writeheader()
         writer.writerows(all_rows)
 
-    print(f"\nResults saved to {OUTPUT_CSV}")
+    print(f"\nResults saved to {args.output_csv}")
 
     print(f"\n{'Benchmark':<20} {'Seq (s)':>10} {'Par (s)':>10} {'Speedup':>10}")
     print("-" * 55)
