@@ -34,6 +34,9 @@ export PATH="${HOME}/yosys:${PATH}"
 VENV_DIR="cluster/.venv_habrok"
 source "${VENV_DIR}/bin/activate"
 
+mkdir -p input/ver
+cp -n benchmarks/v/*.v input/ver/ 2>/dev/null || true
+
 BENCHMARK=$(sed "${SLURM_ARRAY_TASK_ID}q;d" cluster/benchmarks.txt)
 
 # Per-task output dir to avoid CSV overwrites from concurrent array jobs
