@@ -1,22 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=sxpat-bench
 #SBATCH --partition=regular
-#SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=16G
-#SBATCH --array=1-50
 #SBATCH --output=cluster/logs/bench_%A_%a.out
 #SBATCH --error=cluster/logs/bench_%A_%a.err
 #
 # Runs benchmark_labeling.py for ONE benchmark per array task.
-# Each task measures sequential vs parallel labelling time.
-#
-# Usage:
-#   sbatch cluster/benchmark_labeling.job                  # all 50 benchmarks
-#   sbatch --array=15-32 cluster/benchmark_labeling.job    # adders only
-#   sbatch --array=1-5 cluster/benchmark_labeling.job      # small abs_diff only
+# Resource limits (--time, --cpus-per-task, --mem) set by submit_all.sh per tier.
 #
 # Benchmark index mapping (line numbers in cluster/benchmarks.txt):
 #   1-14:  abs_diff  (i4 .. i48)
@@ -41,6 +32,7 @@ export PATH="${HOME}/yosys:${PATH}"
 VENV_DIR="cluster/.venv_habrok"
 source "${VENV_DIR}/bin/activate"
 
+# input/ver/ is gitignored; ensure it exists with benchmark verilog files
 mkdir -p input/ver
 cp -n benchmarks/v/*.v input/ver/ 2>/dev/null || true
 
@@ -50,6 +42,7 @@ echo "================================================================"
 echo "  Job ID:     ${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 echo "  Benchmark:  ${BENCHMARK}"
 echo "  CPUs:       ${SLURM_CPUS_PER_TASK}"
+echo "  Memory:     ${SLURM_MEM_PER_NODE:-default}MB"
 echo "  Node:       $(hostname)"
 echo "  Started:    $(date -Iseconds)"
 echo "================================================================"
