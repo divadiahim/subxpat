@@ -29,6 +29,8 @@ module purge
 module load "${PYTHON_MODULE}"
 module load "${GRAPHVIZ_MODULE}"
 
+export PATH="${HOME}/yosys:${PATH}"
+
 VENV_DIR="cluster/.venv_habrok"
 source "${VENV_DIR}/bin/activate"
 
