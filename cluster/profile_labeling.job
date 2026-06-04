@@ -29,7 +29,7 @@ module purge
 module load "${PYTHON_MODULE}"
 module load "${GRAPHVIZ_MODULE}"
 
-VENV_DIR=".venv_habrok"
+VENV_DIR="cluster/.venv_habrok"
 source "${VENV_DIR}/bin/activate"
 
 BENCHMARK=$(sed "${SLURM_ARRAY_TASK_ID}q;d" cluster/benchmarks.txt)
