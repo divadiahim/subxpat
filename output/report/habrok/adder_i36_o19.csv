@@ -1,4 +1,0 @@
-benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
-adder_i36_o19,36,19,128,4,1,1214.7253,197.6266,6.1466
-adder_i36_o19,36,19,128,4,2,1213.1899,198.6905,6.1059
-adder_i36_o19,36,19,128,4,3,1213.9153,202.6019,5.9916

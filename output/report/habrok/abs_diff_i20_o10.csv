@@ -1,4 +1,4 @@
-benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
-abs_diff_i20_o10,20,10,128,4,1,115.397,12.0781,9.5542
-abs_diff_i20_o10,20,10,128,4,2,116.871,12.1322,9.6331
-abs_diff_i20_o10,20,10,128,4,3,117.1879,12.1091,9.6777
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,original_parallel_s,improved_parallel_s,speedup_original,speedup_improved
+abs_diff_i20_o10,20,10,128,4,1,112.003,12.6548,12.0159,8.8506,9.3212
+abs_diff_i20_o10,20,10,128,4,2,114.6689,12.1646,11.9348,9.4265,9.608
+abs_diff_i20_o10,20,10,128,4,3,114.9452,12.27,11.9067,9.368,9.6538

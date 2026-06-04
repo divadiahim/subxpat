@@ -1,4 +1,4 @@
-benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
-adder_i16_o9,16,9,128,4,1,32.6174,4.5998,7.091
-adder_i16_o9,16,9,128,4,2,32.8208,5.2305,6.2748
-adder_i16_o9,16,9,128,4,3,32.7863,5.2412,6.2555
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,original_parallel_s,improved_parallel_s,speedup_original,speedup_improved
+adder_i16_o9,16,9,128,4,1,34.9049,4.9348,4.847,7.0732,7.2013
+adder_i16_o9,16,9,128,4,2,35.1868,5.2218,4.9515,6.7384,7.1063
+adder_i16_o9,16,9,128,4,3,32.4608,5.1173,4.2686,6.3434,7.6045

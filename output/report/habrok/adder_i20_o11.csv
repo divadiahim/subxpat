@@ -1,4 +1,4 @@
-benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
-adder_i20_o11,20,11,128,4,1,47.3949,4.2027,11.2773
-adder_i20_o11,20,11,128,4,2,44.7553,4.5527,9.8305
-adder_i20_o11,20,11,128,4,3,45.7159,4.4805,10.2033
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,original_parallel_s,improved_parallel_s,speedup_original,speedup_improved
+adder_i20_o11,20,11,128,4,1,46.177,4.5324,4.603,10.1882,10.0319
+adder_i20_o11,20,11,128,4,2,46.3093,4.4818,4.5008,10.3327,10.2892
+adder_i20_o11,20,11,128,4,3,46.5248,4.5227,4.5558,10.2869,10.2123

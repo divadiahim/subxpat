@@ -1,3 +1,3 @@
 benchmark,mode,setup_s,gen_s,exec_s,import_s,overhead_s,total_s,exec_pct,gen_pct
-mul_i10_o10,sequential,1.4056,4.9185,95.4359,0.009,0.0019,101.7709,93.8,4.8
-mul_i10_o10,parallel,1.3966,5.0967,2.9939,0.009,0.002,9.4982,31.5,53.7
+mul_i10_o10,sequential,1.4049,5.3785,97.6383,0.0098,0.0021,104.4336,93.5,5.2
+mul_i10_o10,parallel,1.3806,5.4074,2.9681,0.0093,0.0021,9.7676,30.4,55.4

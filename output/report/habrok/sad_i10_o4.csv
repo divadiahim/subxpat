@@ -1,4 +1,4 @@
-benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
-sad_i10_o4,10,4,128,4,1,37.6968,5.2414,7.1922
-sad_i10_o4,10,4,128,4,2,40.0239,5.6334,7.1047
-sad_i10_o4,10,4,128,4,3,39.3945,5.0556,7.7923
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,original_parallel_s,improved_parallel_s,speedup_original,speedup_improved
+sad_i10_o4,10,4,128,4,1,41.4512,6.1703,6.4716,6.7178,6.405
+sad_i10_o4,10,4,128,4,2,44.6307,5.5688,5.6433,8.0144,7.9086
+sad_i10_o4,10,4,128,4,3,44.5523,5.545,5.3892,8.0347,8.267

@@ -1,4 +1,4 @@
-benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
-sad_i20_o6,20,6,128,4,1,290.3847,45.2946,6.411
-sad_i20_o6,20,6,128,4,2,294.2277,43.4577,6.7704
-sad_i20_o6,20,6,128,4,3,294.5661,42.7635,6.8883
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,original_parallel_s,improved_parallel_s,speedup_original,speedup_improved
+sad_i20_o6,20,6,128,4,1,286.6842,46.203,41.0874,6.2049,6.9774
+sad_i20_o6,20,6,128,4,2,278.334,45.1487,41.0523,6.1648,6.78
+sad_i20_o6,20,6,128,4,3,277.8433,47.999,42.071,5.7885,6.6042

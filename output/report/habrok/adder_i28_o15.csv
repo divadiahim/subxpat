@@ -1,4 +1,4 @@
-benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
-adder_i28_o15,28,15,128,4,1,123.6946,12.1176,10.2078
-adder_i28_o15,28,15,128,4,2,123.719,12.4604,9.9289
-adder_i28_o15,28,15,128,4,3,123.8212,12.9034,9.596
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,original_parallel_s,improved_parallel_s,speedup_original,speedup_improved
+adder_i28_o15,28,15,128,4,1,127.0618,13.6564,13.1365,9.3042,9.6724
+adder_i28_o15,28,15,128,4,2,129.7636,13.4457,13.0486,9.6509,9.9446
+adder_i28_o15,28,15,128,4,3,129.9654,13.3314,13.4327,9.7488,9.6753

@@ -1,4 +1,4 @@
-benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
-madd_i18_o12,18,12,128,4,1,401.7358,31.2898,12.8392
-madd_i18_o12,18,12,128,4,2,402.1714,31.5496,12.7473
-madd_i18_o12,18,12,128,4,3,401.5054,32.2062,12.4667
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,original_parallel_s,improved_parallel_s,speedup_original,speedup_improved
+madd_i18_o12,18,12,128,4,1,384.265,36.3282,31.7381,10.5776,12.1074
+madd_i18_o12,18,12,128,4,2,383.7496,36.0457,30.622,10.6462,12.5318
+madd_i18_o12,18,12,128,4,3,383.4395,36.4571,30.7403,10.5175,12.4735

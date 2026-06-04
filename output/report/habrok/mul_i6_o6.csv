@@ -1,4 +1,4 @@
-benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
-mul_i6_o6,6,6,128,4,1,19.8423,2.8831,6.8822
-mul_i6_o6,6,6,128,4,2,19.4453,2.9297,6.6373
-mul_i6_o6,6,6,128,4,3,19.0227,2.9359,6.4792
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,original_parallel_s,improved_parallel_s,speedup_original,speedup_improved
+mul_i6_o6,6,6,128,4,1,18.5191,3.0207,2.9407,6.1307,6.2975
+mul_i6_o6,6,6,128,4,2,19.8137,3.3228,4.1302,5.963,4.7973
+mul_i6_o6,6,6,128,4,3,21.4315,2.927,2.95,7.3219,7.2649

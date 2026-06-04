@@ -1,4 +1,0 @@
-benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
-abs_diff_i36_o18,36,18,128,4,1,2051.3443,108.169,18.9642
-abs_diff_i36_o18,36,18,128,4,2,2115.0613,111.2658,19.0091
-abs_diff_i36_o18,36,18,128,4,3,2117.8369,115.6055,18.3195

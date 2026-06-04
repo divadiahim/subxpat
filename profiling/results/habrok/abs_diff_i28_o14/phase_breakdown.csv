@@ -1,3 +1,0 @@
-benchmark,mode,setup_s,gen_s,exec_s,import_s,overhead_s,total_s,exec_pct,gen_pct
-abs_diff_i28_o14,sequential,1.9354,13.4697,217.1318,0.0158,0.0031,232.5558,93.4,5.8
-abs_diff_i28_o14,parallel,1.9233,13.5458,4.927,0.0149,0.0033,20.4143,24.1,66.4
