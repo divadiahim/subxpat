@@ -8,7 +8,7 @@
 **/local.*
 # /test  -- tracked for correctness and performance tests
 /experiments
-/output
+#/output
 # data
 # /results
 /*.csv

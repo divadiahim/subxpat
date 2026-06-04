@@ -1,0 +1,4 @@
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
+madd_i6_o4,6,4,128,4,1,11.0714,2.1524,5.1438
+madd_i6_o4,6,4,128,4,2,11.5402,2.0367,5.6661
+madd_i6_o4,6,4,128,4,3,12.5873,2.2871,5.5035

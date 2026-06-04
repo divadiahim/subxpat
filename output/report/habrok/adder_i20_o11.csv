@@ -1,0 +1,4 @@
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
+adder_i20_o11,20,11,128,4,1,47.3949,4.2027,11.2773
+adder_i20_o11,20,11,128,4,2,44.7553,4.5527,9.8305
+adder_i20_o11,20,11,128,4,3,45.7159,4.4805,10.2033

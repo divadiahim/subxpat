@@ -1,0 +1,4 @@
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
+madd_i15_o10,15,10,128,4,1,154.1821,14.1988,10.8588
+madd_i15_o10,15,10,128,4,2,157.3209,13.7109,11.4741
+madd_i15_o10,15,10,128,4,3,156.4867,13.7818,11.3546

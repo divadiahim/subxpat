@@ -1,0 +1,4 @@
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
+adder_i10_o6,10,6,128,4,1,17.3169,2.5629,6.7567
+adder_i10_o6,10,6,128,4,2,19.3725,2.6341,7.3545
+adder_i10_o6,10,6,128,4,3,17.4658,2.6646,6.5547

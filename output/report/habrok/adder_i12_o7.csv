@@ -1,0 +1,4 @@
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
+adder_i12_o7,12,7,128,4,1,21.7597,3.0268,7.189
+adder_i12_o7,12,7,128,4,2,23.6231,2.9321,8.0566
+adder_i12_o7,12,7,128,4,3,24.4885,2.8948,8.4595

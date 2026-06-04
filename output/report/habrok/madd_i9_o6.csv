@@ -1,0 +1,4 @@
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
+madd_i9_o6,9,6,128,4,1,32.6262,4.9777,6.5544
+madd_i9_o6,9,6,128,4,2,32.7334,5.3358,6.1347
+madd_i9_o6,9,6,128,4,3,32.2449,5.3514,6.0255

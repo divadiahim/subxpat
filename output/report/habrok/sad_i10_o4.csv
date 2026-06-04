@@ -1,0 +1,4 @@
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
+sad_i10_o4,10,4,128,4,1,37.6968,5.2414,7.1922
+sad_i10_o4,10,4,128,4,2,40.0239,5.6334,7.1047
+sad_i10_o4,10,4,128,4,3,39.3945,5.0556,7.7923

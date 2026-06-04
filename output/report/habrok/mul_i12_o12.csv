@@ -1,0 +1,4 @@
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
+mul_i12_o12,12,12,128,4,1,255.5816,19.9092,12.8374
+mul_i12_o12,12,12,128,4,2,257.0018,20.2608,12.6847
+mul_i12_o12,12,12,128,4,3,254.0436,20.179,12.5895

@@ -1,0 +1,4 @@
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
+abs_diff_i12_o6,12,6,128,4,1,39.9378,4.0482,9.8657
+abs_diff_i12_o6,12,6,128,4,2,39.9615,5.1656,7.7362
+abs_diff_i12_o6,12,6,128,4,3,40.3937,3.9985,10.1023

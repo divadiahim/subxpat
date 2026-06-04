@@ -1,0 +1,4 @@
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
+adder_i28_o15,28,15,128,4,1,123.6946,12.1176,10.2078
+adder_i28_o15,28,15,128,4,2,123.719,12.4604,9.9289
+adder_i28_o15,28,15,128,4,3,123.8212,12.9034,9.596

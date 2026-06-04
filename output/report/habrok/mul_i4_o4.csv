@@ -1,0 +1,4 @@
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
+mul_i4_o4,4,4,128,4,1,4.0322,1.1701,3.4461
+mul_i4_o4,4,4,128,4,2,3.7045,1.1314,3.2742
+mul_i4_o4,4,4,128,4,3,3.7339,1.152,3.2413

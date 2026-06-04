@@ -1,0 +1,4 @@
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
+madd_i18_o12,18,12,128,4,1,401.7358,31.2898,12.8392
+madd_i18_o12,18,12,128,4,2,402.1714,31.5496,12.7473
+madd_i18_o12,18,12,128,4,3,401.5054,32.2062,12.4667

@@ -1,0 +1,4 @@
+benchmark,num_inputs,num_outputs,num_cpu_cores,partial_cutoff,repeat,sequential_s,parallel_s,speedup
+mul_i8_o8,8,8,128,4,1,49.2725,7.6275,6.4599
+mul_i8_o8,8,8,128,4,2,50.2801,6.5713,7.6515
+mul_i8_o8,8,8,128,4,3,49.4665,6.7454,7.3334
