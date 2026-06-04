@@ -1,8 +1,11 @@
-"""Benchmark sequential vs parallel gate labelling across adder circuits.
+"""Benchmark sequential vs parallel gate labelling across circuits.
 
-Runs time_labeling() in both modes on a configurable set of benchmarks,
-records wall-clock time and speedup, and saves results to:
-    output/report/labeling_benchmark.csv
+Runs time_labeling() in three modes on a configurable set of benchmarks:
+  1. Sequential (one subprocess at a time)
+  2. Original parallel (base Z3Log FIFO pool — the pre-improvement baseline)
+  3. Improved parallel (ThreadPoolExecutor + as_completed)
+
+Records wall-clock time and speedup, and saves results to a CSV.
 
 Usage (from repo root, with venv active):
     python scripts/benchmark_labeling.py
@@ -39,8 +42,10 @@ CSV_HEADER = [
     "partial_cutoff",
     "repeat",
     "sequential_s",
-    "parallel_s",
-    "speedup",
+    "original_parallel_s",
+    "improved_parallel_s",
+    "speedup_original",
+    "speedup_improved",
 ]
 
 
@@ -50,11 +55,42 @@ def _parse_circuit_dims(name: str):
     return (int(m.group(1)), int(m.group(2))) if m else (-1, -1)
 
 
+def _patch_original_parallel():
+    """Temporarily replace run_z3pyscript_labeling with the original Z3Log
+    FIFO-pool implementation, so we can benchmark the pre-improvement baseline.
+    Returns a restore function."""
+    from Z3Log_patched.z3solver import Z3solver
+    saved = Z3solver.run_z3pyscript_labeling
+
+    from subprocess import PIPE, Popen
+    _python = sys.executable
+
+    def _original_run_z3pyscript_labeling(self):
+        active_procs = []
+        num_workers = multiprocessing.cpu_count()
+        for pyscript in self.pyscript_files_for_labeling:
+            proc = Popen([_python, pyscript], stderr=PIPE, stdout=PIPE)
+            active_procs.append(proc)
+            if len(active_procs) >= num_workers:
+                finished_proc = active_procs.pop(0)
+                finished_proc.communicate()
+        for proc in active_procs:
+            proc.communicate()
+
+    Z3solver.run_z3pyscript_labeling = _original_run_z3pyscript_labeling
+
+    def restore():
+        Z3solver.run_z3pyscript_labeling = saved
+
+    return restore
+
+
 def run_benchmark(benchmark: str, partial_cutoff: int, repeat: int) -> dict:
     num_inputs, num_outputs = _parse_circuit_dims(benchmark)
     num_cores = multiprocessing.cpu_count()
 
-    print(f"  [{repeat}] sequential ... ", end="", flush=True)
+    # 1) Sequential
+    print(f"  [{repeat}] sequential        ... ", end="", flush=True)
     _, seq_time = time_labeling(
         benchmark,
         min_labeling=False,
@@ -64,18 +100,36 @@ def run_benchmark(benchmark: str, partial_cutoff: int, repeat: int) -> dict:
     )
     print(f"{seq_time:.2f}s")
 
-    print(f"  [{repeat}] parallel   ... ", end="", flush=True)
-    _, par_time = time_labeling(
+    # 2) Original parallel (FIFO pool baseline)
+    print(f"  [{repeat}] original parallel ... ", end="", flush=True)
+    restore = _patch_original_parallel()
+    try:
+        _, orig_par_time = time_labeling(
+            benchmark,
+            min_labeling=False,
+            partial_labeling=False,
+            partial_cutoff=partial_cutoff,
+            parallel=True,
+        )
+    finally:
+        restore()
+    print(f"{orig_par_time:.2f}s")
+
+    # 3) Improved parallel (ThreadPoolExecutor)
+    print(f"  [{repeat}] improved parallel ... ", end="", flush=True)
+    _, impr_par_time = time_labeling(
         benchmark,
         min_labeling=False,
         partial_labeling=False,
         partial_cutoff=partial_cutoff,
         parallel=True,
     )
-    print(f"{par_time:.2f}s")
+    print(f"{impr_par_time:.2f}s")
 
-    speedup = seq_time / par_time if par_time > 0 else float("inf")
-    print(f"  [{repeat}] speedup    = {speedup:.2f}x")
+    speedup_orig = seq_time / orig_par_time if orig_par_time > 0 else float("inf")
+    speedup_impr = seq_time / impr_par_time if impr_par_time > 0 else float("inf")
+    print(f"  [{repeat}] speedup original  = {speedup_orig:.2f}x")
+    print(f"  [{repeat}] speedup improved  = {speedup_impr:.2f}x")
 
     return {
         "benchmark": benchmark,
@@ -85,13 +139,16 @@ def run_benchmark(benchmark: str, partial_cutoff: int, repeat: int) -> dict:
         "partial_cutoff": partial_cutoff,
         "repeat": repeat,
         "sequential_s": round(seq_time, 4),
-        "parallel_s": round(par_time, 4),
-        "speedup": round(speedup, 4),
+        "original_parallel_s": round(orig_par_time, 4),
+        "improved_parallel_s": round(impr_par_time, 4),
+        "speedup_original": round(speedup_orig, 4),
+        "speedup_improved": round(speedup_impr, 4),
     }
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "--benchmarks", nargs="+", default=DEFAULT_BENCHMARKS,
         metavar="BENCHMARK",
@@ -118,15 +175,18 @@ def main():
 
     print(f"\nResults saved to {args.output_csv}")
 
-    print(f"\n{'Benchmark':<20} {'Seq (s)':>10} {'Par (s)':>10} {'Speedup':>10}")
-    print("-" * 55)
+    print(f"\n{'Benchmark':<20} {'Seq (s)':>10} {'Orig Par':>10} {'Impr Par':>10} "
+          f"{'Spdup Orig':>11} {'Spdup Impr':>11}")
+    print("-" * 78)
     for row in all_rows:
         if row["repeat"] == 1:
             print(
                 f"{row['benchmark']:<20} "
                 f"{row['sequential_s']:>10.2f} "
-                f"{row['parallel_s']:>10.2f} "
-                f"{row['speedup']:>10.2f}x"
+                f"{row['original_parallel_s']:>10.2f} "
+                f"{row['improved_parallel_s']:>10.2f} "
+                f"{row['speedup_original']:>10.2f}x "
+                f"{row['speedup_improved']:>10.2f}x"
             )
 
 
