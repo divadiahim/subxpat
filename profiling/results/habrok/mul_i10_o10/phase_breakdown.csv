@@ -1,0 +1,3 @@
+benchmark,mode,setup_s,gen_s,exec_s,import_s,overhead_s,total_s,exec_pct,gen_pct
+mul_i10_o10,sequential,1.4056,4.9185,95.4359,0.009,0.0019,101.7709,93.8,4.8
+mul_i10_o10,parallel,1.3966,5.0967,2.9939,0.009,0.002,9.4982,31.5,53.7

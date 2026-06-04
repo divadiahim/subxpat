@@ -1,0 +1,3 @@
+benchmark,mode,setup_s,gen_s,exec_s,import_s,overhead_s,total_s,exec_pct,gen_pct
+adder_i32_o17,sequential,1.4314,4.5705,324.0903,0.009,0.0018,330.103,98.2,1.4
+adder_i32_o17,parallel,1.3339,4.5286,36.9785,0.0086,0.0019,42.8516,86.3,10.6

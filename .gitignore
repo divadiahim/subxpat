@@ -10,15 +10,16 @@
 /experiments
 /output
 # data
-/results
+# /results
 /*.csv
 # scripts
 # /scripts  -- tracked for benchmarking utilities
 /*.sh
+logs/
 
 #> generated
-/venv
-/.venv
+.venv*
+/.venv*
 **/__pycache__
 **/yosys_graph.log
 **/yosys_log.txt

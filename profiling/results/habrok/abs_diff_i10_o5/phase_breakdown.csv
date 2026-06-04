@@ -1,0 +1,3 @@
+benchmark,mode,setup_s,gen_s,exec_s,import_s,overhead_s,total_s,exec_pct,gen_pct
+abs_diff_i10_o5,sequential,1.3262,1.0223,32.6173,0.0047,0.0009,34.9714,93.3,2.9
+abs_diff_i10_o5,parallel,1.2856,1.0257,1.1677,0.0041,0.0009,3.484,33.5,29.4

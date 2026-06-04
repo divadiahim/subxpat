@@ -1,0 +1,3 @@
+benchmark,mode,setup_s,gen_s,exec_s,import_s,overhead_s,total_s,exec_pct,gen_pct
+madd_i9_o6,sequential,1.1823,0.8941,29.7215,0.0042,0.0008,31.8029,93.5,2.8
+madd_i9_o6,parallel,1.0643,0.921,2.1854,0.0042,0.0009,4.1757,52.3,22.1
