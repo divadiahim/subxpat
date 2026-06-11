@@ -1,0 +1,64 @@
+#!/bin/bash
+#SBATCH --job-name=sxpat-selective
+#SBATCH --partition=regular
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --output=cluster/logs/selective_%A_%a.out
+#SBATCH --error=cluster/logs/selective_%A_%a.err
+#
+# Runs benchmark_selective.py for ONE benchmark per array task.
+# Compares full relabelling vs fanout-cone selective relabelling vs
+# selective + pre-filter (combined) over simulated rewrite sites,
+# at ET = 1/16, 1/8, 1/4, 1/2 of the maximum output value.
+# Resource limits (--time, --cpus-per-task, --mem) set by submit_selective.sh per tier.
+#
+# Benchmark index mapping (line numbers in cluster/benchmarks.txt):
+#   1-14:  abs_diff  (i4 .. i48)
+#   15-32: adder     (i4 .. i64)
+#   33-37: madd      (i6 .. i18)
+#   38-45: mul       (i4 .. i20)
+#   46-50: sad       (i10 .. i50)
+
+set -euo pipefail
+
+# ── Modules (match setup_env.sh) ──────────────────────────────────────
+PYTHON_MODULE="Python/3.11.3-GCCcore-12.3.0"
+GRAPHVIZ_MODULE="Graphviz/8.1.0-GCCcore-12.3.0"
+# ──────────────────────────────────────────────────────────────────────
+
+module purge
+module load "${PYTHON_MODULE}"
+module load "${GRAPHVIZ_MODULE}"
+
+export PATH="${HOME}/yosys:${PATH}"
+
+VENV_DIR="cluster/.venv_habrok"
+source "${VENV_DIR}/bin/activate"
+
+# input/ver/ is gitignored; ensure it exists with benchmark verilog files
+mkdir -p input/ver
+cp -n benchmarks/v/*.v input/ver/ 2>/dev/null || true
+
+BENCHMARK=$(sed "${SLURM_ARRAY_TASK_ID}q;d" cluster/benchmarks.txt)
+
+echo "================================================================"
+echo "  Job ID:     ${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+echo "  Benchmark:  ${BENCHMARK}"
+echo "  CPUs:       ${SLURM_CPUS_PER_TASK}"
+echo "  Memory:     ${SLURM_MEM_PER_NODE:-default}MB"
+echo "  Node:       $(hostname)"
+echo "  Started:    $(date -Iseconds)"
+echo "================================================================"
+
+TASK_OUT="output/report/habrok_selective"
+mkdir -p "${TASK_OUT}"
+
+python -u scripts/benchmark_selective.py \
+    --benchmarks "${BENCHMARK}" \
+    --n-modified 5 \
+    --trials 3 \
+    --repeats 3 \
+    --output-csv "${TASK_OUT}/${BENCHMARK}.csv"
+
+echo ""
+echo "Finished: $(date -Iseconds)"

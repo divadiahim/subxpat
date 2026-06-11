@@ -1,5 +1,5 @@
 #!/bin/bash
-# Submit the pre-filter benchmark array job to Hábrók with tiered resources.
+# Submit the selective-relabelling benchmark array job to Hábrók with tiered resources.
 # Same tiers as submit_all.sh.
 #
 # Tiers (based on circuit input size):
@@ -8,9 +8,9 @@
 #   large  (i36+):     64 cores,  64G, 72h
 #
 # Usage:
-#   ./cluster/submit_prefilter.sh             # all tiers
-#   ./cluster/submit_prefilter.sh --small     # small tier only
-#   ./cluster/submit_prefilter.sh --medium    # small + medium
+#   ./cluster/submit_selective.sh             # all tiers
+#   ./cluster/submit_selective.sh --small     # small tier only
+#   ./cluster/submit_selective.sh --medium    # small + medium
 #
 # After completion:
 #   python cluster/merge_results.py
@@ -35,7 +35,7 @@ LARGE_CPUS=64
 LARGE_MEM="64G"
 LARGE_TIME="72:00:00"
 
-JOB_SCRIPT="cluster/benchmark_prefilter.job"
+JOB_SCRIPT="cluster/benchmark_selective.job"
 
 # ── Parse flags ───────────────────────────────────────────────────────
 MAX_TIER="large"
@@ -66,7 +66,7 @@ submit_tier() {
 }
 
 echo ""
-echo "=== Submitting prefilter benchmark, max tier: ${MAX_TIER} ==="
+echo "=== Submitting selective-relabelling benchmark, max tier: ${MAX_TIER} ==="
 echo ""
 
 SMALL_JOB=$(submit_tier "small" "${SMALL_RANGE}" ${SMALL_CPUS} "${SMALL_MEM}" "${SMALL_TIME}")

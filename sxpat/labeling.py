@@ -1,6 +1,7 @@
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 import os
+import random
 import time
 import tempfile
 from os.path import join as path_join
@@ -129,3 +130,102 @@ def time_labeling(
             import shutil
             shutil.rmtree(run_paths.temporary, ignore_errors=True)
     return labels, elapsed
+
+
+def pick_rewrite_region(graph, size: int, rng: random.Random) -> List[str]:
+    """Pick a random connected region of ``size`` gates to simulate a rewrite site.
+
+    SubXPAT rewrites convex, connected subcircuits; this mimics one by a BFS
+    over the undirected gate adjacency starting from a random gate.
+    """
+    gates = sorted(graph.gate_dict.values()) + sorted(graph.constant_dict.values())
+    if not gates:
+        return []
+    gate_set = set(gates)
+    start = rng.choice(gates)
+
+    region: List[str] = []
+    seen = {start}
+    queue = [start]
+    while queue and len(region) < size:
+        v = queue.pop(0)
+        region.append(v)
+        neighbours = list(graph.graph.successors(v)) + list(graph.graph.predecessors(v))
+        rng.shuffle(neighbours)
+        for n in neighbours:
+            if n in gate_set and n not in seen:
+                seen.add(n)
+                queue.append(n)
+    return region
+
+
+def time_labeling_selective(
+    benchmark_name: str,
+    n_modified: int,
+    seed: int,
+    *,
+    et: int = -1,
+    prefilter: bool = False,
+    parallel: bool = True,
+    min_labeling: bool = False,
+    constant_value: bool = False,
+    output_base: str = 'output',
+    run_tag: str = '',
+    cleanup: bool = False,
+    previous_labels: Dict = None,
+) -> Tuple[Dict[str, int], float, Dict]:
+    """Time one selective-relabelling invocation for a simulated rewrite.
+
+    A random connected region of ``n_modified`` gates (seeded by ``seed``) plays
+    the role of the gates modified by a subcircuit rewrite; only gates whose
+    miter could have changed are relabelled. With ``prefilter=True`` and a valid
+    ``et``, the output-significance pre-filter is applied on top.
+
+    Returns ``(labels, elapsed_seconds, stats)`` where *stats* is the solver's
+    ``selective_stats`` dict (relabeled / skipped_cone / skipped_prefilter counts).
+    """
+    from sxpat.specifications import Paths
+    from Z3Log_patched.verilog import Verilog
+    from Z3Log_patched.graph import Graph
+    from Z3Log_patched.z3solver import Z3solver
+    from Z3Log_patched.utils import convert_verilog_to_gv
+    from Z3Log_patched.config.config import SINGLE, MAXIMIZE
+
+    verilog_path = os.path.join('input', 'ver', f'{benchmark_name}.v')
+    run_id = f'labeling_{run_tag}{benchmark_name}' if run_tag else f'labeling_{benchmark_name}'
+    run_paths = Paths.RunFiles(run_id, output_base)
+    os.makedirs(run_paths.temporary, exist_ok=True)
+
+    try:
+        t0 = time.perf_counter()
+
+        verilog_obj = Verilog(verilog_path, tmp_v := path_join(run_paths.temporary, 'lbl_sel.v'), run_paths.temporary)
+        verilog_obj.export_circuit()
+        convert_verilog_to_gv(tmp_v, tmp_gv := path_join(run_paths.temporary, 'lbl_sel.gv'), run_paths.temporary)
+        graph_obj = Graph(tmp_gv)
+        graph_obj.export_graph()
+
+        style = 'min' if min_labeling else 'max'
+        z3py_obj = Z3solver(
+            tmp_gv, tmp_gv, run_paths.temporary,
+            experiment=SINGLE, optimization=MAXIMIZE, style=style,
+            partial=False, parallel=parallel,
+            prefilter=prefilter,
+        )
+
+        rng = random.Random(seed)
+        modified_gates = pick_rewrite_region(z3py_obj.labeling_graph, n_modified, rng)
+
+        with open(os.devnull, 'w') as f, redirect_stdout(f):  # suppress prints
+            labels = z3py_obj.label_circuit_selective(
+                modified_gates, constant_value=constant_value, et=et,
+                previous_labels=previous_labels,
+            )
+        elapsed = time.perf_counter() - t0
+        stats = dict(z3py_obj.selective_stats)
+        stats['modified_gates'] = modified_gates
+    finally:
+        if cleanup:
+            import shutil
+            shutil.rmtree(run_paths.temporary, ignore_errors=True)
+    return labels, elapsed, stats

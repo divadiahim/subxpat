@@ -110,6 +110,7 @@ class Z3solver(_Z3solver):
 
         self.__prefilter: bool = prefilter
         self.__prefilter_stats: Dict = {}
+        self.__selective_stats: Dict = {}
 
     @property
     def prefilter(self):
@@ -185,6 +186,8 @@ class Z3solver(_Z3solver):
         print(f'[prefilter] et={et} labeled={labeled} skipped={skipped} '
               f'(total={labeled + skipped})')
 
+        if labeled == 0:  # nothing to solve; importing would fail on a missing dir
+            return self.labels
         self.run_z3pyscript_labeling()
         self.import_labels(constant_value)
         return self.labels
@@ -195,6 +198,104 @@ class Z3solver(_Z3solver):
             self.set_strategy(MONOTONIC)
             return self._label_circuit_prefilter(constant_value, et)
         return super().label_circuit(constant_value, partial=partial, et=et)
+
+    @property
+    def selective_stats(self):
+        return self.__selective_stats
+
+    def _compute_needs_relabel(self, graph, modified_gates) -> set:
+        """Return the set of nodes whose label may have changed after a rewrite
+        that modified ``modified_gates``.
+
+        A gate's label is computed from the miter between that gate and the
+        primary outputs. A rewrite of the gate set R can only affect gates whose
+        fanout paths overlap the region influenced by R: the transitive fanout
+        TFO(R), plus every gate that can reach a node in TFO(R). Both passes are
+        plain BFS over the DAG, O(|V| + |E|) total.
+        """
+        g = graph.graph
+        # 1) transitive fanout of the modified gates (including the gates themselves)
+        tfo = set()
+        stack = list(modified_gates)
+        while stack:
+            v = stack.pop()
+            if v in tfo:
+                continue
+            tfo.add(v)
+            stack.extend(g.successors(v))
+        # 2) every node that can reach the affected region: TFI(TFO(R))
+        needs = set(tfo)
+        stack = list(tfo)
+        while stack:
+            v = stack.pop()
+            for p in g.predecessors(v):
+                if p not in needs:
+                    needs.add(p)
+                    stack.append(p)
+        return needs
+
+    def label_circuit_selective(self, modified_gates, constant_value: bool = False,
+                                et: int = -1, previous_labels: Dict = None) -> Dict:
+        """Fanout-cone selective relabelling.
+
+        Only relabel gates whose miter could have changed after a rewrite of
+        ``modified_gates`` (see ``_compute_needs_relabel``). If the prefilter
+        toggle is set and ``et`` is given, the output-significance pre-filter is
+        applied on top, skipping gates whose minimum non-zero error provably
+        exceeds ET. Labels of skipped gates are taken from ``previous_labels``.
+        """
+        self.experiment = SINGLE
+        self.set_strategy(MONOTONIC)
+
+        needs = self._compute_needs_relabel(self.labeling_graph, modified_gates)
+        min_out = (self._compute_min_output_index(self.labeling_graph)
+                   if (self.prefilter and et != -1) else None)
+
+        relabeled = 0
+        skipped_cone = 0
+        skipped_prefilter = 0
+
+        def _consider(gate):
+            nonlocal relabeled, skipped_cone, skipped_prefilter
+            if gate not in needs:
+                skipped_cone += 1
+                return
+            if min_out is not None:
+                lsb = min_out.get(gate)
+                if lsb is not None and 2 ** lsb > et:
+                    skipped_prefilter += 1
+                    return
+            self.create_pruned_z3pyscript_approximate([gate], constant_value)
+            relabeled += 1
+
+        for key in self.labeling_graph.gate_dict:
+            _consider(self.labeling_graph.gate_dict[key])
+        for key in self.labeling_graph.constant_dict:
+            _consider(self.labeling_graph.constant_dict[key])
+
+        self.__selective_stats = {
+            'et': et,
+            'n_modified': len(modified_gates),
+            'relabeled': relabeled,
+            'skipped_cone': skipped_cone,
+            'skipped_prefilter': skipped_prefilter,
+            'total': relabeled + skipped_cone + skipped_prefilter,
+        }
+        print(f'[selective] modified={len(modified_gates)} et={et} '
+              f'relabeled={relabeled} skipped_cone={skipped_cone} '
+              f'skipped_prefilter={skipped_prefilter} '
+              f'(total={relabeled + skipped_cone + skipped_prefilter})')
+
+        if relabeled > 0:  # importing with zero scripts would fail on a missing dir
+            self.run_z3pyscript_labeling()
+            self.import_labels(constant_value)
+
+        # gates outside the affected region keep their previous-iteration labels
+        if previous_labels:
+            for gate, label in previous_labels.items():
+                self.append_label(gate, label)
+
+        return self.labels
 
     @property
     def graph_in_path(self): raise RuntimeError('[DEPRECATED] talk with Marco if you need this')
