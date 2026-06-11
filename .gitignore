@@ -32,3 +32,5 @@ logs/
 Laura/
 *.xlsx
 .DS_Store
+*.png
+*.pdf

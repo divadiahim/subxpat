@@ -21,6 +21,7 @@ def labeling_explicit(exact_in_verilog_path: str, current_in_verilog_path: str,
                       partial_labeling: bool, partial_cutoff: int,
                       constant_value: bool = False,
                       parallel: bool = False,
+                      prefilter: bool = False,
                       ) -> Tuple[Dict[str, int], Dict[str, int]]:
 
     # 1) create a clean verilog out of exact and approximate circuits
@@ -43,7 +44,8 @@ def labeling_explicit(exact_in_verilog_path: str, current_in_verilog_path: str,
     z3py_obj = Z3solver(
         tmp_exact_gv, tmp_current_gv, run_paths.temporary,
         experiment=SINGLE, optimization=MAXIMIZE, style=style,
-        partial=partial_labeling, parallel=parallel
+        partial=partial_labeling, parallel=parallel,
+        prefilter=prefilter,
     )
 
     with open(os.devnull, 'w') as f, redirect_stdout(f): # suppress prints
@@ -72,6 +74,9 @@ def time_labeling(
     parallel: bool,
     constant_value: bool = False,
     output_base: str = 'output',
+    prefilter: bool = False,
+    run_tag: str = '',
+    cleanup: bool = False,
 ) -> Tuple[Dict[str, int], float]:
     """Run ``labeling_explicit`` for a named benchmark and return elapsed time.
 
@@ -85,6 +90,14 @@ def time_labeling(
         expected at ``input/ver/<benchmark_name>.v``.
     output_base:
         Base directory for output files (default: ``'output'``).
+    run_tag:
+        Optional unique tag mixed into the run id.  ``RunFiles`` places its
+        temporary folder under the system temp dir keyed by run id, so two
+        runs with the same benchmark share (and contaminate) that folder
+        unless their tags differ.
+    cleanup:
+        If True, delete the run's temporary folder after the labels have been
+        imported (recommended together with a unique ``run_tag``).
 
     Returns
     -------
@@ -95,17 +108,24 @@ def time_labeling(
     from sxpat.specifications import Paths
 
     verilog_path = os.path.join('input', 'ver', f'{benchmark_name}.v')
-    run_paths = Paths.RunFiles(f'labeling_{benchmark_name}', output_base)
+    run_id = f'labeling_{run_tag}{benchmark_name}' if run_tag else f'labeling_{benchmark_name}'
+    run_paths = Paths.RunFiles(run_id, output_base)
     os.makedirs(run_paths.temporary, exist_ok=True)
 
-    t0 = time.perf_counter()
-    labels, _ = labeling_explicit(
-        verilog_path, verilog_path, run_paths,
-        min_labeling=min_labeling,
-        partial_labeling=partial_labeling,
-        partial_cutoff=partial_cutoff,
-        constant_value=constant_value,
-        parallel=parallel,
-    )
-    elapsed = time.perf_counter() - t0
+    try:
+        t0 = time.perf_counter()
+        labels, _ = labeling_explicit(
+            verilog_path, verilog_path, run_paths,
+            min_labeling=min_labeling,
+            partial_labeling=partial_labeling,
+            partial_cutoff=partial_cutoff,
+            constant_value=constant_value,
+            parallel=parallel,
+            prefilter=prefilter,
+        )
+        elapsed = time.perf_counter() - t0
+    finally:
+        if cleanup:
+            import shutil
+            shutil.rmtree(run_paths.temporary, ignore_errors=True)
     return labels, elapsed

@@ -1,0 +1,5 @@
+benchmark,num_inputs,num_outputs,num_cpu_cores,et,et_frac,repeat,full_s,full_calls,partial_s,partial_calls,prefilter_s,prefilter_calls,skipped_vs_full
+adder_i8_o5,8,5,12,2,1/16,1,2.2423,52,1.2418,20,1.2421,20,32
+adder_i8_o5,8,5,12,4,1/8,1,2.2423,52,1.607,35,1.6805,35,17
+adder_i8_o5,8,5,12,8,1/4,1,2.2423,52,2.2136,50,2.2408,50,2
+adder_i8_o5,8,5,12,16,1/2,1,2.2423,52,2.1496,52,2.3415,52,0

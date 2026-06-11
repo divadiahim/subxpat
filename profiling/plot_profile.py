@@ -1,12 +1,6 @@
 """Generate thesis-quality plots from the phase profiling CSV.
 
-Reads the merged phase_breakdown CSV and writes figures to an output directory:
-
-  1. stacked_bar.pdf       — stacked bar: time per phase, seq vs par, per benchmark
-  2. exec_speedup.pdf      — bar chart: Z3 execution phase speedup per benchmark
-  3. total_speedup.pdf     — bar chart: total labelling time speedup per benchmark
-  4. phase_pie_<bench>.pdf — pie chart: phase breakdown for each benchmark (both modes)
-  5. phase_dominance.pdf   — line chart: Z3 exec % of total vs circuit size
+Reads the merged phase_breakdown CSV and writes figures to an output directory.
 
 Usage (from repo root):
     python profiling/plot_profile.py
@@ -15,6 +9,7 @@ Usage (from repo root):
 
 import argparse
 import os
+import re
 import sys
 
 import matplotlib
@@ -54,7 +49,6 @@ PHASE_COLORS = {
     'overhead_s': '#BBBBBB',
 }
 
-PIE_MERGE_THRESHOLD = 0.03
 FIG_DIR = os.path.join('profiling', 'results', 'figures')
 DEFAULT_CSV = os.path.join('profiling', 'results', 'phase_breakdown_habrok.csv')
 
@@ -79,7 +73,6 @@ def load_csv(path: str):
 
 
 def pivot(rows):
-    """Return {benchmark: {mode: row}}."""
     d = {}
     for r in rows:
         d.setdefault(r['benchmark'], {})[r['mode']] = r
@@ -87,157 +80,153 @@ def pivot(rows):
 
 
 def _extract_inputs(name: str) -> int:
-    import re
     m = re.search(r'_i(\d+)', name)
     return int(m.group(1)) if m else 0
 
 
+def _extract_family(name: str) -> str:
+    m = re.match(r'^([a-z_]+?)_i', name)
+    return m.group(1) if m else name
+
+
+def _short_label(name: str) -> str:
+    m = re.search(r'_i(\d+)_o(\d+)', name)
+    return f'i{m.group(1)}' if m else name
+
+
+def _group_by_family(benchmarks):
+    families = {}
+    for bm in benchmarks:
+        fam = _extract_family(bm)
+        families.setdefault(fam, []).append(bm)
+    for fam in families:
+        families[fam].sort(key=_extract_inputs)
+    return families
+
+
 def plot_stacked_bars(data: dict, out_dir: str):
+    """Stacked bar split into one subplot per benchmark family."""
     benchmarks = sorted(data.keys(), key=_extract_inputs)
-    n = len(benchmarks)
+    families = _group_by_family(benchmarks)
+    n_families = len(families)
     modes = ['sequential', 'parallel']
 
-    x = np.arange(n)
-    width = 0.35
+    fig, axes = plt.subplots(n_families, 1, figsize=(7, 2.8 * n_families),
+                             sharex=False)
+    if n_families == 1:
+        axes = [axes]
 
-    fig, ax = plt.subplots(figsize=(max(7, n * 1.2), 5))
+    for ax, (fam, bms) in zip(axes, sorted(families.items())):
+        n = len(bms)
+        x = np.arange(n)
+        width = 0.35
 
-    for m_idx, mode in enumerate(modes):
-        offset = (m_idx - 0.5) * width
-        bottoms = np.zeros(n)
-        for phase in PHASES:
-            vals = np.array([data[bm].get(mode, {}).get(phase, 0.0) for bm in benchmarks])
-            label = PHASE_LABELS[phase] if m_idx == 0 else '_nolegend_'
-            ax.bar(x + offset, vals, width, bottom=bottoms,
-                   color=PHASE_COLORS[phase], label=label,
-                   edgecolor='white', linewidth=0.5)
-            bottoms += vals
+        for m_idx, mode in enumerate(modes):
+            offset = (m_idx - 0.5) * width
+            bottoms = np.zeros(n)
+            for phase in PHASES:
+                vals = np.array([data[bm].get(mode, {}).get(phase, 0.0) for bm in bms])
+                label = PHASE_LABELS[phase] if (m_idx == 0 and ax is axes[0]) else '_nolegend_'
+                ax.bar(x + offset, vals, width, bottom=bottoms,
+                       color=PHASE_COLORS[phase], label=label,
+                       edgecolor='white', linewidth=0.5)
+                bottoms += vals
 
-        for i, bm in enumerate(benchmarks):
-            total = data[bm].get(mode, {}).get('total_s', 0.0)
-            ax.text(x[i] + offset, bottoms[i] + 0.05, f'{total:.1f}s',
-                    ha='center', va='bottom', fontsize=7,
-                    color='#333333', fontweight='bold')
+            for i, bm in enumerate(bms):
+                total = data[bm].get(mode, {}).get('total_s', 0.0)
+                ax.text(x[i] + offset, bottoms[i] + 0.02 * bottoms.max(),
+                        f'{total:.0f}s', ha='center', va='bottom', fontsize=7,
+                        color='#333', fontweight='bold')
 
-    tick_positions = []
-    tick_labels_list = []
-    for i in range(n):
-        tick_positions.extend([x[i] - width/2, x[i] + width/2])
-        tick_labels_list.extend(['seq', 'par'])
+        tick_positions = []
+        tick_labels_list = []
+        for i in range(n):
+            tick_positions.extend([x[i] - width/2, x[i] + width/2])
+            tick_labels_list.extend(['seq', 'par'])
+        ax.set_xticks(tick_positions)
+        ax.set_xticklabels(tick_labels_list, fontsize=7)
 
-    ax.set_xticks(tick_positions)
-    ax.set_xticklabels(tick_labels_list, fontsize=7)
+        for i, bm in enumerate(bms):
+            ax.text(x[i], -0.18, _short_label(bm), ha='center', va='top',
+                    fontsize=8, fontweight='bold',
+                    transform=ax.get_xaxis_transform())
 
-    for i, bm in enumerate(benchmarks):
-        ax.text(x[i], -0.13, bm, ha='center', va='top',
-                fontsize=7, fontweight='bold',
-                transform=ax.get_xaxis_transform())
+        ax.set_ylabel('Time (s)')
+        ax.set_title(fam, fontsize=11, fontweight='bold')
+        ax.grid(axis='y', linestyle='--', alpha=0.4)
 
-    ax.set_ylabel('Time (s)')
-    ax.set_title('Labelling pipeline phase breakdown (sequential vs parallel)')
-    ax.legend(loc='upper left', fontsize=8, ncol=len(PHASES))
-    ax.yaxis.set_minor_locator(mticker.AutoMinorLocator())
-    ax.grid(axis='y', linestyle='--', alpha=0.4)
+    axes[0].legend(loc='upper left', fontsize=8, ncol=len(PHASES))
+    fig.suptitle('Labelling pipeline phase breakdown (sequential vs parallel)',
+                 fontsize=12, y=1.01)
     fig.tight_layout()
     _save(fig, out_dir, 'stacked_bar')
 
 
 def plot_speedup(data: dict, out_dir: str, phase: str, title: str, filename: str):
     benchmarks = sorted(data.keys(), key=_extract_inputs)
-    speedups = []
-    for bm in benchmarks:
-        seq = data[bm].get('sequential', {}).get(phase, 0.0)
-        par = data[bm].get('parallel', {}).get(phase, 0.0)
-        speedups.append(seq / par if par > 0 else 0.0)
+    families = _group_by_family(benchmarks)
+    n_families = len(families)
 
-    fig, ax = plt.subplots(figsize=(max(6, len(benchmarks) * 1.0), 4))
-    bars = ax.bar(benchmarks, speedups, color='#4C72B0', edgecolor='white', linewidth=0.5)
+    fig, axes = plt.subplots(1, n_families, figsize=(2.5 * n_families, 4),
+                             sharey=True)
+    if n_families == 1:
+        axes = [axes]
 
-    for bar, val in zip(bars, speedups):
-        ax.text(bar.get_x() + bar.get_width() / 2,
-                bar.get_height() + 0.1,
-                f'{val:.2f}×',
-                ha='center', va='bottom', fontsize=8, fontweight='bold')
+    all_speedups = []
+    for ax, (fam, bms) in zip(axes, sorted(families.items())):
+        speedups = []
+        for bm in bms:
+            seq = data[bm].get('sequential', {}).get(phase, 0.0)
+            par = data[bm].get('parallel', {}).get(phase, 0.0)
+            speedups.append(seq / par if par > 0 else 0.0)
+        all_speedups.extend(speedups)
 
-    ax.axhline(1.0, color='grey', linestyle='--', linewidth=0.8, label='1× (no speedup)')
-    ax.set_ylabel('Speedup (seq / par)')
-    ax.set_title(title)
-    ax.set_ylim(0, max(speedups) * 1.2 + 0.5)
-    ax.tick_params(axis='x', rotation=30)
-    ax.grid(axis='y', linestyle='--', alpha=0.4)
-    ax.legend(fontsize=8)
+        labels = [_short_label(bm) for bm in bms]
+        x = np.arange(len(bms))
+        bars = ax.bar(x, speedups, color='#4C72B0', edgecolor='white', linewidth=0.5)
+
+        for bar, val in zip(bars, speedups):
+            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1,
+                    f'{val:.1f}×', ha='center', va='bottom', fontsize=8, fontweight='bold')
+
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels, fontsize=8)
+        ax.set_title(fam, fontsize=10, fontweight='bold')
+        ax.grid(axis='y', linestyle='--', alpha=0.4)
+        ax.axhline(1.0, color='grey', linestyle='--', linewidth=0.8)
+
+    axes[0].set_ylabel('Speedup (seq / par)')
+    for ax in axes:
+        ax.set_ylim(0, max(all_speedups) * 1.2 + 0.5)
+
+    fig.suptitle(title, fontsize=12)
     fig.tight_layout()
     _save(fig, out_dir, filename)
 
 
-def plot_pies(data: dict, out_dir: str):
-    for bm, modes in data.items():
-        n_modes = len(modes)
-        fig, axes = plt.subplots(1, n_modes, figsize=(5 * n_modes, 4.5))
-        if n_modes == 1:
-            axes = [axes]
-
-        for ax, (mode, row) in zip(axes, sorted(modes.items())):
-            total = row.get('total_s', 1e-9)
-            vals = [row.get(p, 0.0) for p in PHASES]
-            colors = [PHASE_COLORS[p] for p in PHASES]
-            labels = [PHASE_LABELS[p] for p in PHASES]
-
-            big_v, big_c, big_l = [], [], []
-            other_v = 0.0
-            for v, c, lbl in zip(vals, colors, labels):
-                if v / total >= PIE_MERGE_THRESHOLD:
-                    big_v.append(v)
-                    big_c.append(c)
-                    big_l.append(lbl)
-                else:
-                    other_v += v
-
-            if other_v > 0:
-                big_v.append(other_v)
-                big_c.append('#CCCCCC')
-                big_l.append('Other')
-
-            wedges, texts, autotexts = ax.pie(
-                big_v, labels=big_l, colors=big_c,
-                autopct=lambda p: f'{p:.1f}%' if p > 3 else '',
-                startangle=140, pctdistance=0.65,
-                wedgeprops={'edgecolor': 'white', 'linewidth': 1.5},
-            )
-            for t in autotexts:
-                t.set_fontsize(9)
-            for t in texts:
-                t.set_fontsize(9)
-
-            ax.set_title(f'{bm}\n[{mode}]  total={total:.2f}s', fontsize=10)
-
-        fig.suptitle('Phase breakdown', fontsize=12, y=1.02)
-        fig.tight_layout()
-        _save(fig, out_dir, f'pie_{bm}')
-
-
 def plot_phase_dominance(data: dict, out_dir: str):
-    """Line chart: Z3 exec % of total vs circuit input width for both modes."""
     benchmarks = sorted(data.keys(), key=_extract_inputs)
-    inputs = [_extract_inputs(bm) for bm in benchmarks]
+    families = _group_by_family(benchmarks)
 
     fig, ax = plt.subplots(figsize=(7, 4))
 
-    for mode, style, color in [('sequential', 's--', '#4C72B0'), ('parallel', 'o-', '#55A868')]:
+    fam_colors = plt.cm.tab10(np.linspace(0, 1, len(families)))
+    for (fam, bms), color in zip(sorted(families.items()), fam_colors):
+        inputs_list = []
         pcts = []
-        valid_inputs = []
-        for bm, inp in zip(benchmarks, inputs):
-            row = data[bm].get(mode)
+        for bm in bms:
+            row = data[bm].get('sequential')
             if row and row.get('total_s', 0) > 0:
+                inputs_list.append(_extract_inputs(bm))
                 pcts.append(100.0 * row.get('exec_s', 0) / row['total_s'])
-                valid_inputs.append(inp)
         if pcts:
-            ax.plot(valid_inputs, pcts, style, color=color, linewidth=1.5, markersize=5, label=mode)
+            ax.plot(inputs_list, pcts, 'o-', color=color, linewidth=1.5,
+                    markersize=5, label=fam)
 
     ax.set_xlabel('Circuit input width (bits)')
     ax.set_ylabel('Z3 solving (% of total time)')
     ax.set_title('Z3 solving phase dominance vs circuit size')
-    ax.set_ylim(0, 105)
+    ax.set_ylim(60, 102)
     ax.grid(linestyle='--', alpha=0.4)
     ax.legend(fontsize=9)
     fig.tight_layout()
@@ -274,7 +263,6 @@ def main():
                  phase='total_s',
                  title='Total labelling time speedup (parallel vs sequential)',
                  filename='total_speedup')
-    plot_pies(data, args.out_dir)
     plot_phase_dominance(data, args.out_dir)
 
     print(f'\nAll figures saved to: {args.out_dir}')

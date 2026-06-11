@@ -23,12 +23,16 @@ class Z3solver:
                  experiment: str = SINGLE,
                  pruned_percentage: int = None, pruned_gates=None, metric: str = WAE, precision: int = 4,
                  optimization: str = None, style: str = 'max',
-                 parallel:bool = False, partial: bool = True):
+                 parallel:bool = False, partial: bool = True,
+                 prefilter: bool = False):
         """
 
         :param benchmark_name: the input benchmark in gv format
         :param approximate_benchmark_name: the approximate benchmark in gv format
         :param samples: number of samples for the mc evaluation; by defaults it is an empty list
+        :param prefilter: if True, skip the SMT label call for any gate whose
+            least-significant reachable output has weight greater than the error
+            threshold (its minimum non-zero error is then guaranteed to exceed ET)
         """
         self.__circuit_name = get_pure_name(benchmark_name)
 
@@ -100,6 +104,9 @@ class Z3solver:
 
         self.__partial: bool = partial
 
+        self.__prefilter: bool = prefilter
+        self.__prefilter_stats: Dict = {}
+
         # print(f'{len(self.approximate_graph.graph.nodes) = }')
         # print(f'{self.approximate_graph.num_gates = }')
         # print(f'{self.approximate_graph.num_inputs = }')
@@ -110,6 +117,17 @@ class Z3solver:
     @property
     def partial(self):
         return self.__partial
+
+    @property
+    def prefilter(self):
+        return self.__prefilter
+
+    def set_prefilter(self, value: bool):
+        self.__prefilter = value
+
+    @property
+    def prefilter_stats(self):
+        return self.__prefilter_stats
 
     @property
     def labels(self):
@@ -637,9 +655,80 @@ class Z3solver:
     def _get_next_gate(self):
         pass
 
+    def _compute_min_output_index(self, graph) -> Dict[str, int]:
+        """Return {node_name: index of the least-significant primary output
+        reachable from that node}.
+
+        The circuit is a DAG with edges flowing input -> gate -> output, so the
+        minimum reachable output index of a node is the minimum over its
+        successors. Computing this in a single reverse-topological pass costs
+        O(|V| + |E|). Nodes that reach no primary output are absent from the
+        returned dict.
+        """
+        rev_output = {node: idx for idx, node in graph.output_dict.items()}
+        min_idx: Dict[str, int] = {}
+        for node in reversed(list(nx.topological_sort(graph.graph))):
+            if node in rev_output:
+                min_idx[node] = rev_output[node]
+                continue
+            best = None
+            for succ in graph.graph.successors(node):
+                s = min_idx.get(succ)
+                if s is not None and (best is None or s < best):
+                    best = s
+            if best is not None:
+                min_idx[node] = best
+        return min_idx
+
+    def _label_circuit_prefilter(self, constant_value: bool, et: int) -> Dict:
+        """Structural pre-filter labelling.
+
+        For every gate, look at the least-significant output it can reach. If the
+        weight of that output (2**index) already exceeds the error threshold, then
+        any perturbation of the gate must change an output of at least that weight,
+        so its minimum non-zero error is guaranteed to exceed ET. Such gates are
+        infeasible for approximation and are skipped without an SMT call. The
+        remaining gates are labelled by the usual SMT optimisation.
+        """
+        min_out = self._compute_min_output_index(self.labeling_graph)
+
+        skipped = 0
+        labeled = 0
+
+        def _consider(gate):
+            nonlocal skipped, labeled
+            lsb = min_out.get(gate)
+            if lsb is not None and 2 ** lsb > et:
+                skipped += 1
+                return
+            self.create_pruned_z3pyscript_approximate([gate], constant_value)
+            labeled += 1
+
+        for key in self.labeling_graph.gate_dict:
+            _consider(self.labeling_graph.gate_dict[key])
+        for key in self.labeling_graph.constant_dict:
+            _consider(self.labeling_graph.constant_dict[key])
+
+        self.__prefilter_stats = {
+            'et': et,
+            'labeled': labeled,
+            'skipped': skipped,
+            'total': labeled + skipped,
+        }
+        print(Fore.LIGHTBLUE_EX +
+              f'[prefilter] et={et} labeled={labeled} skipped={skipped} '
+              f'(total={labeled + skipped})' + Style.RESET_ALL)
+
+        self.run_z3pyscript_labeling()
+        self.import_labels(constant_value)
+        return self.labels
+
     def label_circuit(self, constant_value: bool = False, partial: bool = False, et: int = -1):
         self.experiment = SINGLE
         self.set_strategy(MONOTONIC)
+
+        if self.prefilter and et != -1:
+            return self._label_circuit_prefilter(constant_value, et)
 
         predecessors_to_label = list(
             self.graph.graph.predecessors(self.graph.output_dict[1]))
