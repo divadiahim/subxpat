@@ -1,0 +1,7 @@
+benchmark,num_inputs,num_outputs,num_cpu_cores,et,et_frac,repeat,full_s,full_calls,partial_s,partial_calls,prefilter_s,prefilter_calls,skipped_vs_full
+abs_diff_i4_o2,4,2,128,1,1/16,1,28.1027,18,2.783,8,2.1387,8,10
+abs_diff_i4_o2,4,2,128,2,1/2,1,28.1027,18,8.4079,18,7.4554,18,0
+abs_diff_i4_o2,4,2,128,1,1/16,2,13.5558,18,16.5257,8,12.3235,8,10
+abs_diff_i4_o2,4,2,128,2,1/2,2,13.5558,18,20.4448,18,11.4897,18,0
+abs_diff_i4_o2,4,2,128,1,1/16,3,14.6768,18,16.2932,8,4.2991,8,10
+abs_diff_i4_o2,4,2,128,2,1/2,3,14.6768,18,7.9676,18,9.2406,18,0
