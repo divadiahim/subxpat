@@ -324,6 +324,15 @@ def labeling_explicit(exact_in_verilog_path: str, current_in_verilog_path: str,
             )
         return (weights,) * 2
 
+    if labeling_method == 'warmstart' and partial_cutoff != -1:
+        const = constant_value if isinstance(constant_value, bool) else False
+        with open(os.devnull, 'w') as f, redirect_stdout(f):
+            weights, _ = warmstart_labeling(
+                z3py_obj, et=partial_cutoff, samples=sim_samples, seed=sim_seed,
+                constant_value=const,
+            )
+        return (weights,) * 2
+
     with open(os.devnull, 'w') as f, redirect_stdout(f): # suppress prints
         if constant_value is False:
             labels_pair = (

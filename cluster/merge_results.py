@@ -14,6 +14,7 @@ BENCH_DIR = os.path.join("output", "report", "habrok")
 PROF_DIR = os.path.join("profiling", "results", "habrok")
 PREFILTER_DIR = os.path.join("output", "report", "habrok_prefilter")
 SELECTIVE_DIR = os.path.join("output", "report", "habrok_selective")
+FULLRUN_DIR = os.path.join("output", "report", "habrok_fullrun")
 
 
 def merge_benchmark_csvs(src_dir: str, out_path: str):
@@ -74,7 +75,17 @@ def main():
     parser.add_argument("--prof-dir", default=PROF_DIR)
     parser.add_argument("--prefilter-dir", default=PREFILTER_DIR)
     parser.add_argument("--selective-dir", default=SELECTIVE_DIR)
+    parser.add_argument("--fullrun-dir", default=FULLRUN_DIR)
     args = parser.parse_args()
+
+    print("Merging full-run results...")
+    if os.path.isdir(args.fullrun_dir):
+        merge_benchmark_csvs(
+            args.fullrun_dir,
+            os.path.join("output", "report", "fullrun_habrok.csv"),
+        )
+    else:
+        print(f"  Skipping (not found): {args.fullrun_dir}")
 
     print("Merging benchmark results...")
     if os.path.isdir(args.bench_dir):

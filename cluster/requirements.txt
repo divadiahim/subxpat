@@ -2,6 +2,7 @@ bidict==0.23.1
 colorama==0.4.6
 matplotlib==3.6.2
 networkx==2.8.8
+numpy==1.24.4
 natsort==8.2.0
 pandas==1.5.2
 pytz==2022.7

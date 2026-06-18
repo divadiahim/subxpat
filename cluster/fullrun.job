@@ -1,0 +1,73 @@
+#!/bin/bash
+#SBATCH --job-name=sxpat-fullrun
+#SBATCH --partition=regular
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --output=cluster/logs/fullrun_%A_%a.out
+#SBATCH --error=cluster/logs/fullrun_%A_%a.err
+#
+# Runs the full SubXPAT loop for ONE benchmark per array task, under every
+# labelling mode (full, exact, prefilter, simulation, warmstart, wce), at two
+# error thresholds. Records per-stage Z3-call counts, total time, and area.
+# Resource limits set by submit_fullrun.sh per tier.
+#
+# Benchmark index = line number in cluster/benchmarks_fullrun.txt.
+
+set -euo pipefail
+
+PYTHON_MODULE="Python/3.11.3-GCCcore-12.3.0"
+GRAPHVIZ_MODULE="Graphviz/8.1.0-GCCcore-12.3.0"
+
+module purge
+module load "${PYTHON_MODULE}"
+module load "${GRAPHVIZ_MODULE}"
+
+export PATH="${HOME}/yosys:${PATH}"
+
+# area comes from yosys; OpenSTA (power/delay) may be absent -> stub `sta`
+STABIN="${TMPDIR:-/tmp}/stabin_${SLURM_JOB_ID:-$$}"
+mkdir -p "${STABIN}"
+printf '#!/bin/bash\ncat >/dev/null 2>&1\nexit 0\n' > "${STABIN}/sta"
+chmod +x "${STABIN}/sta"
+export PATH="${STABIN}:${PATH}"
+
+VENV_DIR="cluster/.venv_habrok"
+source "${VENV_DIR}/bin/activate"
+
+# benchmark verilog (gitignored) + generated DCT coefficient circuits
+mkdir -p input/ver
+cp -n benchmarks/v/*.v input/ver/ 2>/dev/null || true
+for k in 0 1 2 3; do
+    if [[ ! -f "input/ver/dct4c${k}_i16_o9.v" ]]; then
+        python scripts/dct_generate.py --points 4 --in-bits 4 --coeff ${k} \
+            --out "input/ver/dct4c${k}_i16_o9.v" || true
+    fi
+done
+
+BENCHMARK=$(sed "${SLURM_ARRAY_TASK_ID}q;d" cluster/benchmarks_fullrun.txt)
+O=$(echo "${BENCHMARK}" | grep -oP '_o\K[0-9]+')
+ET_LOW=$(python -c "print(max(1, 2**max(1, ${O}-4)))")
+ET_HIGH=$(python -c "print(2**max(1, ${O}-2))")
+
+echo "================================================================"
+echo "  Job:        ${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+echo "  Benchmark:  ${BENCHMARK}  (ETs: ${ET_LOW} ${ET_HIGH})"
+echo "  CPUs:       ${SLURM_CPUS_PER_TASK}   Node: $(hostname)"
+echo "  Started:    $(date -Iseconds)"
+echo "================================================================"
+
+TASK_OUT="output/report/habrok_fullrun"
+mkdir -p "${TASK_OUT}"
+
+for METHOD in full exact prefilter simulation warmstart wce; do
+    echo "--- method=${METHOD} ---"
+    python -u scripts/benchmark_fullrun.py \
+        --benchmarks "${BENCHMARK}" \
+        --ets "${ET_LOW}" "${ET_HIGH}" \
+        --method "${METHOD}" \
+        --sim-samples 1024 \
+        --cell-timeout 120 \
+        --out "${TASK_OUT}/${BENCHMARK}_${METHOD}.csv" || echo "  (method ${METHOD} failed)"
+done
+
+echo "Finished: $(date -Iseconds)"

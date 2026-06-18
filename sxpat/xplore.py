@@ -524,17 +524,36 @@ def label_graph(circuit_verilog_path: str, graph: AnnotatedGraph, specs_obj: Spe
 
     # compute weights
     ET_COEFFICIENT = 1
-    # labelling method can be switched for benchmarking via environment variables
-    # (SXPAT_LABELING_METHOD = 'exact' | 'simulation'; SXPAT_SIM_SAMPLES, SXPAT_SIM_SEED)
-    labeling_method = os.environ.get('SXPAT_LABELING_METHOD', 'exact')
+    # labelling method can be switched for benchmarking via environment variables.
+    # SXPAT_LABELING_METHOD selects the labelling optimisation:
+    #   exact      - baseline mnze (minimize), one Optimize() call per labelled gate
+    #   prefilter  - omit the Z3 call for gates whose mnze provably exceeds ET (1A)
+    #   simulation - replace the Optimize() call by a simulation upper bound (1B)
+    #   warmstart  - seed the Optimize() with a simulation upper bound, exact labels (1B')
+    #   wce        - alternative objective: maximise the error instead of minimise (1C)
+    # SXPAT_SIM_SAMPLES / SXPAT_SIM_SEED tune the simulation modes.
+    method = os.environ.get('SXPAT_LABELING_METHOD', 'exact')
     sim_samples = int(os.environ.get('SXPAT_SIM_SAMPLES', '1024'))
     sim_seed = int(os.environ.get('SXPAT_SIM_SEED', '0'))
+
+    prefilter = (method == 'prefilter')
+    min_labeling = specs_obj.min_labeling
+    partial_labeling = specs_obj.partial_labeling
+    inner_method = 'exact'
+    if method == 'full':
+        partial_labeling = False     # label every gate (1A baseline)
+    elif method in ('simulation', 'warmstart'):
+        inner_method = method
+    elif method == 'wce':
+        min_labeling = False  # maximise (worst-case error) objective
+
     weights, _ = labeling_explicit(
         circuit_verilog_path, circuit_verilog_path, specs_obj.path.run,
-        min_labeling=specs_obj.min_labeling,
-        partial_labeling=specs_obj.partial_labeling, partial_cutoff=specs_obj.et * ET_COEFFICIENT,
+        min_labeling=min_labeling,
+        partial_labeling=partial_labeling, partial_cutoff=specs_obj.et * ET_COEFFICIENT,
         parallel=specs_obj.parallel,
-        labeling_method=labeling_method, sim_samples=sim_samples, sim_seed=sim_seed,
+        labeling_method=inner_method, sim_samples=sim_samples, sim_seed=sim_seed,
+        prefilter=prefilter,
     )
 
     # apply weights to graph
