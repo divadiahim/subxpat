@@ -112,6 +112,25 @@ class Z3solver(_Z3solver):
         self.__prefilter_stats: Dict = {}
         self.__selective_stats: Dict = {}
 
+        # per-gate warm-start upper bound for the minimisation (Strategy 2 /
+        # simulation warm-start); None means use the default loose bound.
+        self._warm_bound = None
+
+    def set_warm_bound(self, value):
+        self._warm_bound = value
+
+    def express_monotonic_while_loop(self):
+        loop = super().express_monotonic_while_loop()
+        # Inject a tight initial upper bound from simulation: the exact minimum
+        # is <= warm_bound, so constraining the search to [0, warm_bound] keeps
+        # the optimum unchanged while shrinking the solver's search space.
+        if self._warm_bound is not None and self.style == 'min':
+            loop = loop.replace(
+                '(f_error(exact_out, approx_out)) <= z3_abs(max)',
+                f'(f_error(exact_out, approx_out)) <= z3_abs({int(self._warm_bound)})',
+            )
+        return loop
+
     @property
     def prefilter(self):
         return self.__prefilter

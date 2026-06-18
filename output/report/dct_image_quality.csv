@@ -1,0 +1,10 @@
+image,et,psnr,ssim
+circles,exact,inf,1.0
+checker,exact,inf,1.0
+blobs,exact,inf,1.0
+circles,16,29.421,0.9821
+checker,16,29.542,0.9767
+blobs,16,29.13,0.8968
+circles,64,23.873,0.9378
+checker,64,20.792,0.911
+blobs,64,23.961,0.7362

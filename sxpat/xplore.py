@@ -524,11 +524,17 @@ def label_graph(circuit_verilog_path: str, graph: AnnotatedGraph, specs_obj: Spe
 
     # compute weights
     ET_COEFFICIENT = 1
+    # labelling method can be switched for benchmarking via environment variables
+    # (SXPAT_LABELING_METHOD = 'exact' | 'simulation'; SXPAT_SIM_SAMPLES, SXPAT_SIM_SEED)
+    labeling_method = os.environ.get('SXPAT_LABELING_METHOD', 'exact')
+    sim_samples = int(os.environ.get('SXPAT_SIM_SAMPLES', '1024'))
+    sim_seed = int(os.environ.get('SXPAT_SIM_SEED', '0'))
     weights, _ = labeling_explicit(
         circuit_verilog_path, circuit_verilog_path, specs_obj.path.run,
         min_labeling=specs_obj.min_labeling,
         partial_labeling=specs_obj.partial_labeling, partial_cutoff=specs_obj.et * ET_COEFFICIENT,
-        parallel=specs_obj.parallel
+        parallel=specs_obj.parallel,
+        labeling_method=labeling_method, sim_samples=sim_samples, sim_seed=sim_seed,
     )
 
     # apply weights to graph

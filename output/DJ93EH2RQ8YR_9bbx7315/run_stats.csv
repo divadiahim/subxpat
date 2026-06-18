@@ -1,0 +1,9 @@
+iteration,error_threshold,circuit_to_approximate,annotated_graphs_initialization_time,labelling_time,subgraph_extraction_time,subgraph_nodes_count,subgraph_inputs_count,subgraph_outputs_count,cell_coord_0,cell_coord_1,grid_phase_definition_time,grid_phase_solution_time,status,cell_time,erroreval_annotated_graphs_initialization_time,verification_time,circuit_path,circuit_error,circuit_area,circuit_power,circuit_delay,circuit_is_best
+1,1,verilog/current.v,0.45951200000000014,0.9282630000000003,9.95137,0,0,0,,,,,,,,,,,,,,
+2,2,verilog/current.v,0.5754610000000007,1.2321329999999993,9.940337,0,0,0,,,,,,,,,,,,,,
+3,3,verilog/current.v,0.5964830000000028,1.1851800000000026,9.997354000000001,0,0,0,,,,,,,,,,,,,,
+4,4,verilog/current.v,0.599181999999999,1.4039440000000099,9.902809000000005,0,0,0,,,,,,,,,,,,,,
+5,5,verilog/current.v,0.5977359999999976,1.3662260000000046,5.940593,0,0,0,,,,,,,,,,,,,,
+6,6,verilog/current.v,0.524402000000002,1.4143180000000015,9.887163000000008,0,0,0,,,,,,,,,,,,,,
+7,7,verilog/current.v,0.5189850000000007,1.3468159999999898,8.251741000000024,0,0,0,,,,,,,,,,,,,,
+8,8,verilog/current.v,0.5766499999999866,10.025870000000012,4.332103000000004,5,3,1,0,1,0.00605600000001516,0.5049029999999988,SAT,0.5130590000000126,0.2755459999999772,0.3381439999999998,verilog/gen_iter8_model0.v,8,136.5663,0.0,0.0,True

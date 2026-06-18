@@ -1,0 +1,9 @@
+benchmark,et,exact_area,approx_area,area_reduction_pct,wall_s,approx_verilog
+dct4c0_i16_o9,16,171.764,136.566,20.49,89.01,output/dct_approx/dct4c0_i16_o9_et16.v
+dct4c0_i16_o9,64,171.764,70.8643,58.74,163.38,output/dct_approx/dct4c0_i16_o9_et64.v
+dct4c1_i16_o9,16,382.479,314.431,17.79,530.55,output/dct_approx/dct4c1_i16_o9_et16.v
+dct4c1_i16_o9,64,382.479,347.282,9.2,557.73,output/dct_approx/dct4c1_i16_o9_et64.v
+dct4c2_i16_o9,16,233.711,206.961,11.45,288.23,output/dct_approx/dct4c2_i16_o9_et16.v
+dct4c2_i16_o9,64,233.711,198.514,15.06,194.47,output/dct_approx/dct4c2_i16_o9_et64.v
+dct4c3_i16_o9,16,392.804,364.646,7.17,568.44,output/dct_approx/dct4c3_i16_o9_et16.v
+dct4c3_i16_o9,64,392.804,258.584,34.17,820.5,output/dct_approx/dct4c3_i16_o9_et64.v
