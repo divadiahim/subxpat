@@ -1,0 +1,2 @@
+benchmark,et,method,labelling_calls,labelling_s,rewriting_calls,rewriting_s,verification_calls,verification_s,total_z3_calls,total_s,exact_area,approx_area
+madd_i6_o4,2,prefilter,26,0.848,14,4.151,2,0.422,42,11.76,42.7063,27.6887

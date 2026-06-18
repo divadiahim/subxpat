@@ -1,0 +1,2 @@
+benchmark,et,method,labelling_calls,labelling_s,rewriting_calls,rewriting_s,verification_calls,verification_s,total_z3_calls,total_s,exact_area,approx_area
+dct4c1_i16_o9,32,prefilter,1650,16.447,58,110.241,18,7.144,1726,351.15,382.479,344.466

@@ -1,0 +1,2 @@
+benchmark,et,method,labelling_calls,labelling_s,rewriting_calls,rewriting_s,verification_calls,verification_s,total_z3_calls,total_s,exact_area,approx_area
+abs_diff_i8_o4,2,warmstart,18,0.76,9,4.619,4,0.841,31,15.26,74.6187,48.3379

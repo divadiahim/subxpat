@@ -1,0 +1,2 @@
+benchmark,et,method,labelling_calls,labelling_s,rewriting_calls,rewriting_s,verification_calls,verification_s,total_z3_calls,total_s,exact_area,approx_area
+adder_i6_o4,2,warmstart,17,0.922,8,2.283,8,1.659,33,13.68,37.544,17.8334

@@ -1,0 +1,2 @@
+benchmark,et,method,labelling_calls,labelling_s,rewriting_calls,rewriting_s,verification_calls,verification_s,total_z3_calls,total_s,exact_area,approx_area
+dct4c0_i16_o9,32,simulation,38,2.917,10,7.436,10,2.34,58,80.2,171.764,102.307
