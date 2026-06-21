@@ -40,6 +40,7 @@ OUTPUT_DIR = os.path.join("output", "figure")
 COLORS = {
     'full':      '#4C72B0',
     'selective': '#DD8452',
+    'prefilter': '#8172B3',
     'combined':  '#55A868',
 }
 
@@ -80,6 +81,8 @@ def _mean_rows(df: pd.DataFrame) -> pd.DataFrame:
             full_calls=("full_calls", "mean"),
             selective_s=("selective_s", "mean"),
             selective_calls=("selective_calls", "mean"),
+            prefilter_s=("prefilter_s", "mean"),
+            prefilter_calls=("prefilter_calls", "mean"),
             combined_s=("combined_s", "mean"),
             combined_calls=("combined_calls", "mean"),
         )
@@ -110,10 +113,12 @@ def _grouped_bar(df: pd.DataFrame, out_dir: str, frac: str, columns, ylabel,
     for ax, (fam, fdf) in zip(axes, sorted(families.items())):
         n = len(fdf)
         x = np.arange(n)
-        w = 0.25
+        k = len(columns)
+        w = 0.8 / k
+        offs = [(i - (k - 1) / 2) * w for i in range(k)]
 
         top = fdf[[c for c, _, _ in columns]].values.max()
-        for off, (col, key, label) in zip((-w, 0, w), columns):
+        for off, (col, key, label) in zip(offs, columns):
             bars = ax.bar(x + off, fdf[col].values, width=w,
                           label=label if ax is axes[0] else "_nolegend_",
                           color=COLORS[key], edgecolor='white', linewidth=0.5)
@@ -143,6 +148,7 @@ def plot_calls_bar(df: pd.DataFrame, out_dir: str, frac: str):
         columns=[
             ("full_calls", 'full', "Full relabel"),
             ("selective_calls", 'selective', "Selective"),
+            ("prefilter_calls", 'prefilter', "Pre-filter"),
             ("combined_calls", 'combined', "Selective + pre-filter"),
         ],
         ylabel="SMT optimisation calls",
@@ -158,6 +164,7 @@ def plot_times_bar(df: pd.DataFrame, out_dir: str, frac: str):
         columns=[
             ("full_s", 'full', "Full relabel"),
             ("selective_s", 'selective', "Selective"),
+            ("prefilter_s", 'prefilter', "Pre-filter"),
             ("combined_s", 'combined', "Selective + pre-filter"),
         ],
         ylabel="Wall-clock time (s)",
@@ -187,6 +194,9 @@ def plot_calls_vs_size(df: pd.DataFrame, out_dir: str, frac: str):
         ax.plot(fdf["num_inputs"], fdf["selective_calls"], 'o-',
                 color=COLORS['selective'], linewidth=1.6, markersize=4,
                 label="Selective" if ax is axes[0] else "_nolegend_")
+        ax.plot(fdf["num_inputs"], fdf["prefilter_calls"], 'o-',
+                color=COLORS['prefilter'], linewidth=1.6, markersize=4,
+                label="Pre-filter" if ax is axes[0] else "_nolegend_")
         ax.plot(fdf["num_inputs"], fdf["combined_calls"], 'o-',
                 color=COLORS['combined'], linewidth=1.6, markersize=4,
                 label="Selective + pre-filter" if ax is axes[0] else "_nolegend_")

@@ -60,6 +60,8 @@ CSV_HEADER = [
     "full_calls",
     "selective_s",
     "selective_calls",
+    "prefilter_s",
+    "prefilter_calls",
     "combined_s",
     "combined_calls",
 ]
@@ -100,6 +102,17 @@ def run_benchmark(benchmark: str, ets, n_modified: int, trials: int,
     full_calls = len(full_labels)
     print(f"{full_time:.2f}s  calls={full_calls}")
 
+    # Pre-filter-only relabelling = skip infeasible gates, solve the rest (partial
+    # labelling). It is rewrite-independent, so measure once per (benchmark, et).
+    prefilter_by_et = {}
+    for et, frac in ets:
+        print(f"  [{repeat}] prefilter (et={et}) ... ", end="", flush=True)
+        pf_labels, pf_time = time_labeling(
+            benchmark, min_labeling=False, partial_labeling=True,
+            partial_cutoff=et, parallel=parallel, run_tag=_tag(), cleanup=True)
+        prefilter_by_et[et] = (round(pf_time, 4), len(pf_labels))
+        print(f"{pf_time:.2f}s  calls={len(pf_labels)}")
+
     rows = []
     for trial in range(1, trials + 1):
         seed = 1000 * repeat + trial  # reproducible rewrite sites
@@ -119,6 +132,7 @@ def run_benchmark(benchmark: str, ets, n_modified: int, trials: int,
             comb_calls = comb_stats["relabeled"]
             print(f"{comb_time:.2f}s  calls={comb_calls}")
 
+            pf_s, pf_calls = prefilter_by_et[et]
             rows.append({
                 "benchmark": benchmark,
                 "num_inputs": num_inputs,
@@ -133,6 +147,8 @@ def run_benchmark(benchmark: str, ets, n_modified: int, trials: int,
                 "full_calls": full_calls,
                 "selective_s": round(sel_time, 4),
                 "selective_calls": sel_calls,
+                "prefilter_s": pf_s,
+                "prefilter_calls": pf_calls,
                 "combined_s": round(comb_time, 4),
                 "combined_calls": comb_calls,
             })
