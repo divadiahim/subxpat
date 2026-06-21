@@ -59,7 +59,12 @@ echo "================================================================"
 TASK_OUT="output/report/habrok_fullrun"
 mkdir -p "${TASK_OUT}"
 
-for METHOD in full exact prefilter simulation warmstart wce; do
+# labelling-optimisation modes compared in the paper:
+#   full       - label every gate (upper baseline)
+#   exact      - default partial labelling (baseline)
+#   prefilter  - 1A: structural pre-filter, zero labelling Z3 calls
+#   simulation - 1B: simulation upper bound replaces the mnze optimisation
+for METHOD in full exact prefilter simulation; do
     echo "--- method=${METHOD} ---"
     python -u scripts/benchmark_fullrun.py \
         --benchmarks "${BENCHMARK}" \

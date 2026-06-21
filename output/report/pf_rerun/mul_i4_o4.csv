@@ -1,0 +1,2 @@
+benchmark,et,method,labelling_calls,labelling_s,rewriting_calls,rewriting_s,verification_calls,verification_s,total_z3_calls,total_s,exact_area,approx_area
+mul_i4_o4,2,prefilter,0,0.0,8,1.347,2,0.184,10,3.83,19.2413,19.2413

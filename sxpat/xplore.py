@@ -536,13 +536,12 @@ def label_graph(circuit_verilog_path: str, graph: AnnotatedGraph, specs_obj: Spe
     sim_samples = int(os.environ.get('SXPAT_SIM_SAMPLES', '1024'))
     sim_seed = int(os.environ.get('SXPAT_SIM_SEED', '0'))
 
-    prefilter = (method == 'prefilter')
     min_labeling = specs_obj.min_labeling
     partial_labeling = specs_obj.partial_labeling
     inner_method = 'exact'
     if method == 'full':
-        partial_labeling = False     # label every gate (1A baseline)
-    elif method in ('simulation', 'warmstart'):
+        partial_labeling = False     # label every gate (baseline)
+    elif method in ('prefilter', 'simulation', 'warmstart'):
         inner_method = method
     elif method == 'wce':
         min_labeling = False  # maximise (worst-case error) objective
@@ -553,7 +552,6 @@ def label_graph(circuit_verilog_path: str, graph: AnnotatedGraph, specs_obj: Spe
         partial_labeling=partial_labeling, partial_cutoff=specs_obj.et * ET_COEFFICIENT,
         parallel=specs_obj.parallel,
         labeling_method=inner_method, sim_samples=sim_samples, sim_seed=sim_seed,
-        prefilter=prefilter,
     )
 
     # apply weights to graph

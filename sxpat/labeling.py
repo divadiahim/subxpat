@@ -166,6 +166,38 @@ def _min_output_index(graph) -> Dict[str, int]:
     return min_idx
 
 
+def structural_labeling(graph, et: int) -> Tuple[Dict[str, int], Dict]:
+    """Pure structural pre-filter labelling (proposed Strategy 1A).
+
+    Issues **no Z3 calls at all**. Each gate is labelled directly with the
+    output-significance value ``2^L`` where ``L`` is the index of its least
+    significant reachable output: this is a sound lower bound on ``mnze_g``.
+    Gates with ``2^L > ET`` are infeasible and excluded (weight omitted).
+
+    The label is the pre-filter value itself rather than the exact ``mnze_g``;
+    correctness of the final circuit is unaffected (the rewriting step still
+    verifies the ET bound), but the structural label may steer subcircuit
+    selection differently from the exact label.
+    """
+    min_out = _min_output_index(graph)
+    strip = lambda k: _re.sub(r'^app_', '', k)
+    weights: Dict[str, int] = {}
+    n_feasible = n_infeasible = 0
+    for node in list(graph.gate_dict.values()) + list(graph.constant_dict.values()):
+        L = min_out.get(node)
+        if L is None:
+            continue
+        val = 2 ** L
+        if val > et:
+            n_infeasible += 1
+            continue
+        weights[strip(node)] = val
+        n_feasible += 1
+    stats = {'et': et, 'feasible': n_feasible, 'infeasible': n_infeasible, 'z3_calls': 0}
+    print(f'[structural] et={et} feasible={n_feasible} infeasible={n_infeasible} z3_calls=0')
+    return weights, stats
+
+
 def simulation_labeling(z3py_obj, et: int, samples: int, seed: int,
                         constant_value: bool = False,
                         smt_fallback: bool = True) -> Tuple[Dict[str, int], Dict]:
@@ -314,6 +346,12 @@ def labeling_explicit(exact_in_verilog_path: str, current_in_verilog_path: str,
         partial=partial_labeling, parallel=parallel,
         prefilter=prefilter,
     )
+
+    if labeling_method == 'prefilter' and partial_cutoff != -1:
+        # 1A: structural pre-filter only, no Z3 optimisation calls
+        with open(os.devnull, 'w') as f, redirect_stdout(f):
+            weights, _ = structural_labeling(z3py_obj.labeling_graph, et=partial_cutoff)
+        return (weights,) * 2
 
     if labeling_method == 'simulation' and partial_cutoff != -1:
         const = constant_value if isinstance(constant_value, bool) else False
