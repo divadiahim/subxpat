@@ -1,2 +1,2 @@
 benchmark,et,method,labelling_calls,labelling_s,rewriting_calls,rewriting_s,verification_calls,verification_s,total_z3_calls,total_s,exact_area,approx_area
-madd_i6_o4,2,exact,26,1.086,14,4.516,2,0.416,42,12.31,42.7063,27.6887
+madd_i6_o4,2,exact,26,0.872,14,5.262,2,0.47,42,13.36,42.7063,27.6887

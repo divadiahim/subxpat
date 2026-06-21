@@ -1,2 +1,2 @@
 benchmark,et,method,labelling_calls,labelling_s,rewriting_calls,rewriting_s,verification_calls,verification_s,total_z3_calls,total_s,exact_area,approx_area
-mul_i8_o8,16,exact,456,7.846,45,54.306,22,5.036,523,136.2,196.167,109.347
+mul_i8_o8,16,exact,456,11.712,45,60.547,22,5.35,523,150.07,196.167,109.347

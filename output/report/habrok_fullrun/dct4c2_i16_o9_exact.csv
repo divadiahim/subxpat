@@ -1,2 +1,2 @@
 benchmark,et,method,labelling_calls,labelling_s,rewriting_calls,rewriting_s,verification_calls,verification_s,total_z3_calls,total_s,exact_area,approx_area
-dct4c2_i16_o9,32,exact,467,6.227,30,30.83,14,3.501,511,145.03,233.711,200.86
+dct4c2_i16_o9,32,exact,467,12.209,30,31.265,14,3.514,511,155.12,233.711,200.86

@@ -1,2 +1,0 @@
-benchmark,et,method,labelling_calls,labelling_s,rewriting_calls,rewriting_s,verification_calls,verification_s,total_z3_calls,total_s,exact_area,approx_area
-mul_i8_o8,16,wce,508,8.42,53,37.099,16,3.71,577,115.6,196.167,148.768

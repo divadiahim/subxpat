@@ -1,2 +1,2 @@
 benchmark,et,method,labelling_calls,labelling_s,rewriting_calls,rewriting_s,verification_calls,verification_s,total_z3_calls,total_s,exact_area,approx_area
-adder_i8_o5,2,simulation,2,0.462,2,0.577,4,0.854,8,8.37,52.5616,38.0133
+adder_i8_o5,2,simulation,2,0.461,2,0.562,4,0.824,8,8.09,52.5616,38.0133

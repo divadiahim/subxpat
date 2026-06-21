@@ -1,2 +1,0 @@
-benchmark,et,method,labelling_calls,labelling_s,rewriting_calls,rewriting_s,verification_calls,verification_s,total_z3_calls,total_s,exact_area,approx_area
-adder_i10_o6,4,wce,41,2.28,28,12.674,16,3.324,85,40.08,67.5792,37.544

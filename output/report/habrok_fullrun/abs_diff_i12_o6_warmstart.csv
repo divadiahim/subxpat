@@ -1,2 +1,2 @@
 benchmark,et,method,labelling_calls,labelling_s,rewriting_calls,rewriting_s,verification_calls,verification_s,total_z3_calls,total_s,exact_area,approx_area
-dct4c0_i16_o9,32,warmstart,320,7.034,16,13.017,8,1.904,344,80.67,171.764,151.584
+abs_diff_i12_o6,4,warmstart,196,21.734,23,29.207,10,9.127,229,89.59,138.913,94.7986

@@ -1,2 +1,0 @@
-benchmark,et,method,labelling_calls,labelling_s,rewriting_calls,rewriting_s,verification_calls,verification_s,total_z3_calls,total_s,exact_area,approx_area
-adder_i12_o7,8,warmstart,127,3.389,33,15.887,16,3.55,176,52.78,82.5968,50.2151
