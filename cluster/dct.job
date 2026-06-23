@@ -1,0 +1,78 @@
+#!/bin/bash
+#SBATCH --job-name=sxpat-dct1a
+#SBATCH --partition=regular
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --output=cluster/logs/dct1a_%j.out
+#SBATCH --error=cluster/logs/dct1a_%j.err
+#
+# DCT case study with the 1A structural pre-filter labelling (SXPAT_LABELING_METHOD=prefilter).
+# Runs the full SubXPAT loop on all four DCT coefficient circuits at two error
+# thresholds (WP5 area), saving the best approximate circuit per run, then runs
+# the image-quality pipeline on those circuits (WP6 PSNR/SSIM).
+# Resources set by submit_dct.sh.
+
+set -euo pipefail
+
+PYTHON_MODULE="Python/3.11.3-GCCcore-12.3.0"
+GRAPHVIZ_MODULE="Graphviz/8.1.0-GCCcore-12.3.0"
+
+module purge
+module load "${PYTHON_MODULE}"
+module load "${GRAPHVIZ_MODULE}"
+
+export PATH="${HOME}/yosys:${PATH}"
+
+# area comes from yosys; OpenSTA (power/delay) may be absent -> stub `sta`
+STABIN="${TMPDIR:-/tmp}/stabin_${SLURM_JOB_ID:-$$}"
+mkdir -p "${STABIN}"
+printf '#!/bin/bash\ncat >/dev/null 2>&1\nexit 0\n' > "${STABIN}/sta"
+chmod +x "${STABIN}/sta"
+export PATH="${STABIN}:${PATH}"
+
+VENV_DIR="cluster/.venv_habrok"
+source "${VENV_DIR}/bin/activate"
+
+# generate DCT coefficient circuits if missing
+mkdir -p input/ver
+for k in 0 1 2 3; do
+    if [[ ! -f "input/ver/dct4c${k}_i16_o9.v" ]]; then
+        python scripts/dct_generate.py --points 4 --in-bits 4 --coeff ${k} \
+            --out "input/ver/dct4c${k}_i16_o9.v"
+    fi
+done
+
+# select labelling method: 1A structural pre-filter (override via env if needed)
+export SXPAT_LABELING_METHOD="${SXPAT_LABELING_METHOD:-prefilter}"
+
+OUT="output/report/habrok_dct"
+mkdir -p "${OUT}"
+
+echo "================================================================"
+echo "  Job:       ${SLURM_JOB_ID}"
+echo "  Labelling: ${SXPAT_LABELING_METHOD}"
+echo "  CPUs:      ${SLURM_CPUS_PER_TASK}   Node: $(hostname)"
+echo "  Started:   $(date -Iseconds)"
+echo "================================================================"
+
+# WP5: area-vs-ET with 1A labelling, save approximate circuits for WP6
+python -u scripts/run_dct_subxpat.py \
+    --benchmarks dct4c0_i16_o9 dct4c1_i16_o9 dct4c2_i16_o9 dct4c3_i16_o9 \
+    --ets 16 64 \
+    --out "${OUT}/dct_area_1a.csv" \
+    --approx-dir "${OUT}/dct_approx_1a"
+
+# WP6: image-quality pipeline on the 1A approximate circuits.
+# --save-images dumps original + reconstructed PNGs to output/dct_images/ for the slides.
+python -u scripts/dct_image_pipeline.py \
+    --approx-dir "${OUT}/dct_approx_1a" \
+    --ets 16 64 \
+    --out "${OUT}/dct_image_quality_1a.csv" \
+    --save-images
+
+# collect the rendered images alongside the CSVs so they come back in one place
+mkdir -p "${OUT}/images"
+cp -f output/dct_images/*.png "${OUT}/images/" 2>/dev/null || true
+
+echo "Finished: $(date -Iseconds)"
+echo "Outputs: ${OUT}/dct_area_1a.csv  ${OUT}/dct_image_quality_1a.csv  ${OUT}/images/"
