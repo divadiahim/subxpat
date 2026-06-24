@@ -1,0 +1,9 @@
+benchmark,et,exact_area,approx_area,area_reduction_pct,wall_s,approx_verilog
+dct4c0_i16_o9,16,171.764,136.566,20.49,61.8,output/report/habrok_dct/dct_approx_1a/dct4c0_i16_o9_et16.v
+dct4c0_i16_o9,64,171.764,93.3907,45.63,163.25,output/report/habrok_dct/dct_approx_1a/dct4c0_i16_o9_et64.v
+dct4c1_i16_o9,16,382.479,273.602,28.47,427.92,output/report/habrok_dct/dct_approx_1a/dct4c1_i16_o9_et16.v
+dct4c1_i16_o9,64,382.479,140.321,63.31,337.9,output/report/habrok_dct/dct_approx_1a/dct4c1_i16_o9_et64.v
+dct4c2_i16_o9,16,233.711,209.777,10.24,97.95,output/report/habrok_dct/dct_approx_1a/dct4c2_i16_o9_et16.v
+dct4c2_i16_o9,64,233.711,176.457,24.5,111.33,output/report/habrok_dct/dct_approx_1a/dct4c2_i16_o9_et64.v
+dct4c3_i16_o9,16,392.804,346.343,11.83,531.24,output/report/habrok_dct/dct_approx_1a/dct4c3_i16_o9_et16.v
+dct4c3_i16_o9,64,392.804,375.909,4.3,172.07,output/report/habrok_dct/dct_approx_1a/dct4c3_i16_o9_et64.v
